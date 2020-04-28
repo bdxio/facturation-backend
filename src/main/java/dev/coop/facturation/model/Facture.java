@@ -1,0 +1,94 @@
+package dev.coop.facturation.model;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ *
+ * @author lforet
+ */
+public class Facture extends HasSocieteCodeKey {
+
+    private Client client;
+    private LocalDate date;
+//    private LocalDate dateEcheance;
+//    private Date date;
+    private final List<Ligne> lignes = new ArrayList<>();
+    private final List<Ligne> ristournes = new ArrayList<>();
+
+    public Facture(Societe societe, int codeValue) {
+        super(societe, codeValue);
+    }
+
+    @Override
+    public CodeFormatter.Prefix getCodePrefix() {
+        return CodeFormatter.Prefix.FA;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public Facture setClient(Client client) {
+        this.client = client;
+        return this;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public LocalDate getDateEcheance() {
+        return date.plusDays(getSociete().getDelaiPaiement());
+    }
+    
+    public Facture setDate(LocalDate date) {
+        this.date = date;
+        return this;
+    }
+
+    public List<Ligne> getLignes() {
+        return lignes;
+    }
+
+    public Facture addLigne(Ligne ligne) {
+        lignes.add(ligne);
+        return this;
+    }
+
+    public List<Ligne> getRistournes() {
+        return ristournes;
+    }
+
+    public Facture addRistourne(Ligne ristourne) {
+        ristournes.add(ristourne);
+        return this;
+    }
+
+    public Montant getTotalHT() {
+        Montant total = new Montant(BigDecimal.ZERO);
+        for (Ligne ligne : lignes) {
+            total = total.add(ligne.getMontantHT());
+        }
+        return total;
+    }
+
+    public Montant getTotalTtc() {
+        Montant total = new Montant(BigDecimal.ZERO);
+        for (Ligne ligne : lignes) {
+            total = total.add(ligne.getMontantTtc());
+        }
+        return total;
+    }
+
+    public Montant getTotalTva() {
+        Montant total = new Montant(BigDecimal.ZERO);
+        for (Ligne ligne : lignes) {
+            total = total.add(ligne.getMontantTva());
+        }
+        return total;
+    }
+
+}

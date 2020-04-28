@@ -1,0 +1,15 @@
+logging:
+    level: INFO
+
+server:
+    port:  ${port:8080}
+    
+data:
+    mongodb:
+        database: bdxio
+    gs:
+        p12Path: compta-devcoop-bdxio-584617e8c679.p12
+        p12Password: notasecret
+        serviceAccountId: bdxio-34@compta-devcoop.iam.gserviceaccount.com
+        #https://console.developers.google.com/apis/dashboard?project=compta-devcoop&duration=PT1H
+    
