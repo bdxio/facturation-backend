@@ -142,7 +142,7 @@ public class SpreadsheetImporter {
                     return;
                 }
 
-                Societe societe = societeRepository.findOne(cel.getValue(SOCIETEREF));
+                Societe societe = societeRepository.findByIdOrThrow(cel.getValue(SOCIETEREF));
                 int id = Numbers.toInt(idValue);
 
                 Article article = new Article(societe, id)
@@ -171,7 +171,7 @@ public class SpreadsheetImporter {
             listFeed.getEntries().stream().forEach((listEntry) -> {
                 final CustomElementCollection cel = listEntry.getCustomElements();
 
-                Societe societe = societeRepository.findOne(cel.getValue(SOCIETEREF));
+                Societe societe = societeRepository.findByIdOrThrow(cel.getValue(SOCIETEREF));
                 int id = Numbers.toInt(cel.getValue(ID));
 
                 Client client = new Client(societe, id)
@@ -197,9 +197,9 @@ public class SpreadsheetImporter {
             final Map<Integer, Facture> factureMap = new HashMap<>();
             listFeed.getEntries().stream().forEach((listEntry) -> {
                 final CustomElementCollection cel = listEntry.getCustomElements();
-                final Societe societe = societeRepository.findOne(cel.getValue(SOCIETEREF));
-                final Client client = clientRepository.findOne(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(CLIENTREF))));
-                final Article article = articleRepository.findOne(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(ARTICLEREF))));
+                final Societe societe = societeRepository.findByIdOrThrow(cel.getValue(SOCIETEREF));
+                final Client client = clientRepository.findByIdOrThrow(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(CLIENTREF))));
+                final Article article = articleRepository.findByIdOrThrow(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(ARTICLEREF))));
                 final LocalDate date = Dates.parse(cel.getValue(DATE));
 
                 String description = cel.getValue(DESCRIPTION);
@@ -237,9 +237,9 @@ public class SpreadsheetImporter {
             final Map<Integer, Devis> devisMap = new HashMap<>();
             listFeed.getEntries().stream().forEach((listEntry) -> {
                 final CustomElementCollection cel = listEntry.getCustomElements();
-                final Societe societe = societeRepository.findOne(cel.getValue(SOCIETEREF));
-                final Client client = clientRepository.findOne(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(CLIENTREF))));
-                final Article article = articleRepository.findOne(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(ARTICLEREF))));
+                final Societe societe = societeRepository.findByIdOrThrow(cel.getValue(SOCIETEREF));
+                final Client client = clientRepository.findByIdOrThrow(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(CLIENTREF))));
+                final Article article = articleRepository.findByIdOrThrow(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(ARTICLEREF))));
                 final LocalDate date = Dates.parse(cel.getValue(DATE));
 
                 String description = cel.getValue(DESCRIPTION);

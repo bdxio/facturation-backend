@@ -2,6 +2,7 @@ package dev.coop.facturation.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import org.springframework.data.annotation.PersistenceConstructor;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class Article extends HasSocieteCodeKey {
@@ -10,6 +11,11 @@ public class Article extends HasSocieteCodeKey {
     private Montant montant;
     private Unite unite;
     private TVA tva;
+
+    @PersistenceConstructor
+    public Article(SocieteCodeKey id) {
+        super(id);
+    }
 
     public Article(Societe societe, int codeValue) {
         super(societe, codeValue);

@@ -4,11 +4,12 @@ import dev.coop.facturation.FacturationException;
 import dev.coop.facturation.model.Article;
 import dev.coop.facturation.model.SocieteCodeKey;
 import dev.coop.facturation.persistence.ArticleRepository;
-import dev.coop.facturation.persistence.UtilisateurRepository;
 import dev.coop.facturation.security.ConnectedUser;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.web.bind.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,8 +25,8 @@ public class ArticleController {
     private ArticleRepository articleRepository;
    
     @RequestMapping(value = "/{articleId}", method = RequestMethod.GET)
-    public Article getArticle(@AuthenticationPrincipal ConnectedUser user, @PathVariable String articleId) {
-        return articleRepository.findOne(SocieteCodeKey.create(user.getUtilisateur().getSociete(), articleId));
+    public Optional<Article> getArticle(@AuthenticationPrincipal ConnectedUser user, @PathVariable String articleId) {
+        return articleRepository.findById(SocieteCodeKey.create(user.getUtilisateur().getSociete(), articleId));
     }
     
     @RequestMapping(method = RequestMethod.GET)

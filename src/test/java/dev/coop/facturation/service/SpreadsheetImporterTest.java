@@ -17,7 +17,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
@@ -25,7 +25,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author lfo
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = Facturation.class)
+@SpringBootTest(classes = Facturation.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SpreadsheetImporterTest {
 
     @Autowired
@@ -45,7 +45,7 @@ public class SpreadsheetImporterTest {
     public void test() {
         importer.importAll("1chuyY5g2sU7kWEvZkZb8jygKda7Pw9aTNTYPcXntWc8");
 
-        final Societe bdxio = societeRepository.findOne(BdxIoInitializer.BDXIO);
+        final Societe bdxio = societeRepository.findByIdOrThrow(BdxIoInitializer.BDXIO);
 
         
         final List<Facture> factures = factureRepository.findBySociete(bdxio);

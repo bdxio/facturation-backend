@@ -1,8 +1,9 @@
 package dev.coop.facturation.model;
 
+import org.springframework.data.annotation.Transient;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -15,7 +16,7 @@ public class Montant {
     public enum Monnaie {
         EUR("€");
 
-        private Monnaie(String representation) {
+        Monnaie(String representation) {
             this.representation = representation;
         }
         
@@ -52,6 +53,7 @@ public class Montant {
         return valeur == null ? BigDecimal.ZERO : valeur;
     }
 
+    @Transient
     public Monnaie getMonnaie() {
         return monnaie;
     }

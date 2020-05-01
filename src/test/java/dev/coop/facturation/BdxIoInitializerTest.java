@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
@@ -22,7 +22,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author lfo
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = Facturation.class)
+@SpringBootTest(classes = Facturation.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class BdxIoInitializerTest {
     
     @Autowired
@@ -40,7 +40,7 @@ public class BdxIoInitializerTest {
     @Test
     public void doInit() throws Exception {
         bdxIoInitializer.doInit();
-        final Societe bdxio = societeRepository.findOne(BdxIoInitializer.BDXIO);
+        final Societe bdxio = societeRepository.findByIdOrThrow(BdxIoInitializer.BDXIO);
         
         final List<Facture> factures = factureRepository.findBySociete(bdxio);
         final File target = new File("target");

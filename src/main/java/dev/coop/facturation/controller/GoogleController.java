@@ -47,13 +47,14 @@ public class GoogleController {
 
     @RequestMapping("generateInDrive/{societeName}/{folderId}")
     public void generateInDrive(@PathVariable String societeName, @PathVariable String folderId) {
-        Societe societe = societeRepository.findOne(societeName);
+        Societe societe = societeRepository.findById(societeName)
+                .orElseThrow(() -> new IllegalStateException(String.format("La société avec le nom %s est inconnue", societeName)));
+
         List<Facture> factures = factureRepository.findBySociete(societe);
         factures.addAll(devisRepository.findBySociete(societe));
-        factures.stream().forEach(facture -> {
-
+        factures.forEach(facture -> {
             PdfGenerator generator = composer.getComposer(societe);
-            String fileName = generator.getFileName(facture);
+            String fileName = PdfGenerator.getFileName(facture);
             try {
                 if (googleDrive.getFile(fileName, folderId) == null) {
                     ByteArrayOutputStream out = new ByteArrayOutputStream();

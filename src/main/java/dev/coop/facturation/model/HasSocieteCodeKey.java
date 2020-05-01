@@ -3,6 +3,7 @@ package dev.coop.facturation.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
 /**
@@ -19,12 +20,17 @@ public abstract class HasSocieteCodeKey extends HasCode {
     private int codeValue;
     @DBRef
     private Societe societe;
+
+    @PersistenceConstructor
+    public HasSocieteCodeKey(SocieteCodeKey id) {
+        this.id = id;
+        setCode(codeValue);
+    }
    
     public HasSocieteCodeKey(Societe societe, int codeValue) {
         this.societe = societe;
         this.codeValue = codeValue;
         this.id = new SocieteCodeKey(societe, codeValue);
-        setCode(codeValue);
     }
 
     public int getCodeValue() {

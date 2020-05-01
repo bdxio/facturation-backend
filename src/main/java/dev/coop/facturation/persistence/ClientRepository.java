@@ -9,5 +9,9 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface ClientRepository extends MongoRepository<Client, SocieteCodeKey> {
     
     List<Client> findBySociete(Societe societe);
-    
+
+    default Client findByIdOrThrow(SocieteCodeKey id) {
+        return this.findById(id)
+                .orElseThrow(() -> new IllegalStateException(String.format("Le client %s est inconnue", id)));
+    }
 }

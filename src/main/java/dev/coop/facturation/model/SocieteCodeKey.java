@@ -59,6 +59,12 @@ public class SocieteCodeKey implements Serializable {
     public static SocieteCodeKey create(Societe societe, HasSocieteCodeKey hasCodeKey) {
         return new SocieteCodeKey(societe, hasCodeKey.getCodeValue());
     }
-    
-    
+
+    @Override
+    public String toString() {
+        return "SocieteCodeKey{" +
+                "societe='" + societe + '\'' +
+                ", codeValue=" + codeValue +
+                '}';
+    }
 }

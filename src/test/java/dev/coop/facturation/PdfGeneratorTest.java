@@ -9,11 +9,11 @@ import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = Facturation.class)
+@SpringBootTest(classes = Facturation.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class PdfGeneratorTest {
     
     @Autowired
@@ -26,7 +26,7 @@ public class PdfGeneratorTest {
     @Test
     public void testGeneration() throws IOException {
         dataInitializer.doInit();
-        Facture facture = factureRepository.findOne(SocieteCodeKey.create(DevcoopInitializer.DEVCOOP, 132));
+        Facture facture = factureRepository.findByIdOrThrow(SocieteCodeKey.create(DevcoopInitializer.DEVCOOP, 132));
         pdfGenerator.generate(facture, new File("target"));
     }
 }

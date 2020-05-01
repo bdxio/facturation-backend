@@ -1,6 +1,7 @@
 package dev.coop.facturation.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  *
@@ -14,6 +15,11 @@ public class Client extends HasSocieteCodeKey {
     private String numTVAIntracom;
     
     private Adresse adresse;
+
+    @PersistenceConstructor
+    public Client(SocieteCodeKey id) {
+        super(id);
+    }
 
     public Client(Societe societe, int codeValue) {
         super(societe, codeValue);

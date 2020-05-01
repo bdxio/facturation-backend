@@ -1,17 +1,18 @@
 package dev.coop.facturation.configuration;
 
-import com.mongodb.Mongo;
-import java.time.LocalDate;
-import java.util.Arrays;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+
+import java.time.LocalDate;
+import java.util.Arrays;
 
 /**
  *
@@ -19,20 +20,12 @@ import org.springframework.data.mongodb.core.convert.CustomConversions;
  */
 @Configuration
 @Import(value = MongoAutoConfiguration.class)
-public class MongoConfiguration extends AbstractMongoConfiguration implements EnvironmentAware {
-
-    @Autowired
-    private Mongo mongo;
+public class MongoConfiguration extends AbstractMongoClientConfiguration implements EnvironmentAware {
     private Environment environment;
 
     @Override
-    public CustomConversions customConversions() {
-        return new CustomConversions(Arrays.asList(new LocalDateToLongConverter(), new LongToLocalDateConverter()));
-    }
-
-    @Override
-    public Mongo mongo() throws Exception {
-        return mongo;
+    public MongoCustomConversions customConversions() {
+        return new MongoCustomConversions(Arrays.asList(new LocalDateToLongConverter(), new LongToLocalDateConverter()));
     }
 
     @Override
@@ -43,6 +36,11 @@ public class MongoConfiguration extends AbstractMongoConfiguration implements En
     @Override
     public void setEnvironment(Environment e) {
         this.environment = e;
+    }
+
+    @Override
+    public MongoClient mongoClient() {
+        return MongoClients.create();
     }
 
     public static class LocalDateToLongConverter implements Converter<LocalDate, Long> {

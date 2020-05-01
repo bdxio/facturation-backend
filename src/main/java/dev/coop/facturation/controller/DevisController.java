@@ -41,8 +41,8 @@ public class DevisController {
         if (!devis.getSociete().getNom().equals(societe.getNom())) {
             throw new FacturationException("Societe de l'article ne correspond pas à celle de l'utilisateur!");
         }
-        Client client = clientRepository.findOne(SocieteCodeKey.create(user.getUtilisateur().getSociete(), devis.getClient()));
-        devis.setClient(client);
+        clientRepository.findById(SocieteCodeKey.create(user.getUtilisateur().getSociete(), devis.getClient()))
+                .ifPresent(devis::setClient);
         return devisRepository.save(devis);
     }
 }

@@ -1,5 +1,7 @@
 package dev.coop.facturation.model;
 
+import org.springframework.data.annotation.PersistenceConstructor;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -15,11 +17,20 @@ public class Facture extends HasSocieteCodeKey {
     private LocalDate date;
 //    private LocalDate dateEcheance;
 //    private Date date;
-    private final List<Ligne> lignes = new ArrayList<>();
-    private final List<Ligne> ristournes = new ArrayList<>();
+    private final List<Ligne> lignes;
+    private final List<Ligne> ristournes;
+
+    @PersistenceConstructor
+    public Facture(SocieteCodeKey id, List<Ligne> lignes, List<Ligne> ristournes) {
+        super(id);
+        this.lignes = lignes;
+        this.ristournes = ristournes;
+    }
 
     public Facture(Societe societe, int codeValue) {
         super(societe, codeValue);
+        this.lignes = new ArrayList<>();
+        this.ristournes = new ArrayList<>();
     }
 
     @Override

@@ -36,8 +36,10 @@ public class FactureController {
         if (!facture.getSociete().getNom().equals(societe.getNom())) {
             throw new FacturationException("Societe de l'article ne correspond pas à celle de l'utilisateur!");
         }
-        Client client = clientRepository.findOne(SocieteCodeKey.create(user.getUtilisateur().getSociete(), facture.getClient()));
-        facture.setClient(client);
+
+        clientRepository.findById(SocieteCodeKey.create(user.getUtilisateur().getSociete(), facture.getClient()))
+                .ifPresent(facture::setClient);
+
         return factureRepository.save(facture);
     }
 }
