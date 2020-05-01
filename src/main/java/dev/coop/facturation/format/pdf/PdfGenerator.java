@@ -12,7 +12,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.format.DateTimeFormatter;
-import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.springframework.stereotype.Component;
 
 public abstract class PdfGenerator {
@@ -23,6 +22,7 @@ public abstract class PdfGenerator {
     private static final Coord TOP_LEFT_COORD = Coord.createA4().incrX(MARGIN_LEFT).decrY(MARGIN_UP).immutable();
     private static final Coord SOCIETE_COORD = TOP_LEFT_COORD.immutable();
     private static final Coord LOGO_COORD = new Coord(140, 260).immutable();
+    private static final String LOGO_NAME = "Logo";
     private static final Coord CLIENT_COORD = new Coord(120, 230).immutable();
     private static final Coord FACTURE_COORD = new Coord(MARGIN_LEFT, 190).immutable();
     private static final Coord TABLEAU_COORD = new Coord(MARGIN_LEFT, 150).immutable();
@@ -57,13 +57,13 @@ public abstract class PdfGenerator {
 
         try {
             pdf.toDocument().save(out);
-        } catch (IOException | COSVisitorException ex) {
+        } catch (IOException ex) {
             throw new FacturationException(ex);
         }
     }
 
     protected void insertLogo(PdfBuilder pdf, Societe societe) {
-        pdf.setCoord(LOGO_COORD.copy()).putImage(societe.getLogo(), 50, 30);
+        pdf.setCoord(LOGO_COORD.copy()).putImage(societe.getLogo(), 50, 30, LOGO_NAME);
     }
 
     protected void insertSociete(PdfBuilder pdf, Societe societe) {

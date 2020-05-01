@@ -1,27 +1,19 @@
 package dev.coop.facturation.format.pdf;
 
-import dev.coop.facturation.FacturationException;
 import dev.coop.facturation.format.Coord;
 import dev.coop.facturation.format.FormatException;
 import dev.coop.facturation.format.Style;
 import dev.coop.facturation.format.Style.Align;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import javax.imageio.ImageIO;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.encoding.Encoding;
-import org.apache.pdfbox.encoding.EncodingManager;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.edit.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.graphics.xobject.PDJpeg;
-import org.apache.pdfbox.pdmodel.graphics.xobject.PDPixelMap;
-import org.apache.pdfbox.pdmodel.graphics.xobject.PDXObjectImage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+
+import java.awt.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * https://github.com/ullenboom/jrtf
@@ -33,7 +25,6 @@ public class PdfBuilder implements Style.StyleEventListener {
     private static final int DEFAULT_USER_SPACE_UNIT_DPI = 72;
     private static final float MM_TO_UNITS = 1 / (10 * 2.54f) * DEFAULT_USER_SPACE_UNIT_DPI;
 
-    private static final String REENCODED_EURO;
     private static final String EURO = "€";
 
     private final PDDocument document;
@@ -42,20 +33,11 @@ public class PdfBuilder implements Style.StyleEventListener {
     private Coord coord;
     private Style style;
 
-    static {
-        try {
-            Encoding e = EncodingManager.INSTANCE.getEncoding(COSName.WIN_ANSI_ENCODING);
-            REENCODED_EURO = String.valueOf(Character.toChars(e.getCode("Euro")));
-        } catch (IOException ex) {
-            throw new FacturationException(ex);
-        }
-    }
-
     public PdfBuilder(Coord size, Style style) {
         try {
             this.coord = size;
             document = new PDDocument();
-            page = new PDPage(PDPage.PAGE_SIZE_A4);
+            page = new PDPage(PDRectangle.A4);
             document.addPage(page);
             contentStream = new PDPageContentStream(document, page);
             setStyle(style);
@@ -83,28 +65,21 @@ public class PdfBuilder implements Style.StyleEventListener {
         return this;
     }
 
-    public PdfBuilder putImage(byte[] input, int width, int height) {
-        if (input != null) {
-            putImage(new ByteArrayInputStream(input), width, height);
+    public PdfBuilder putImage(byte[] input, int width, int height, final String name) {
+        if (input == null) {
+            return this;
         }
-        return this;
-    }
 
-    public PdfBuilder putImage(InputStream input, int width, int height) {
-        PDXObjectImage image = null;
+        PDImageXObject image;
         try {
-            image = new PDJpeg(document, input);
-        } catch (IOException | IllegalStateException ex) {
-            try {
-                input.reset();
-                image = new PDPixelMap(document, ImageIO.read(input));
-            } catch (IOException ex2) {
-                throw new FormatException(ex2);
-            }
+            image = PDImageXObject.createFromByteArray(document, input, name);
+        } catch (IOException e) {
+            throw new FormatException(e);
         }
+
         try {
             Dimension scaledDim = getScaledDimension(new Dimension(image.getWidth(), image.getHeight()), new Dimension((int) toUnits(width), (int) toUnits(height)));
-            contentStream.drawXObject(image, toUnits(coord.getX()), toUnits(coord.getY()), scaledDim.width, scaledDim.height);
+            contentStream.drawImage(image, toUnits(coord.getX()), toUnits(coord.getY()), scaledDim.width, scaledDim.height);
         } catch (IOException ex) {
 //            throw new FormatException(ex);
         }
@@ -139,25 +114,24 @@ public class PdfBuilder implements Style.StyleEventListener {
 
             if (style.getBackgroundColor() != null && !style.getBackgroundColor().equals(Color.WHITE)) {
                 contentStream.setNonStrokingColor(style.getBackgroundColor());
-                contentStream.fillRect(x, y - Coord.computeHeight(style), boxWidth - borderSize, boxHeight - borderSize);
+                contentStream.addRect(x, y - Coord.computeHeight(style), boxWidth - borderSize, boxHeight - borderSize);
                 contentStream.setNonStrokingColor(style.getColor());
             }
 
             contentStream.beginText();
 
-            final String stringToDraw = reencodeEuros(text);
             switch (align) {
                 case LEFT:
-                    contentStream.moveTextPositionByAmount(x, y);
+                    contentStream.newLineAtOffset(x, y);
                     break;
                 case RIGHT:
-                    contentStream.moveTextPositionByAmount(x + boxWidth - textWidth - borderSize, y);
+                    contentStream.newLineAtOffset(x + boxWidth - textWidth - borderSize, y);
                     break;
                 case CENTER:
-                    contentStream.moveTextPositionByAmount(x + (boxWidth - textWidth) / 2, y);
+                    contentStream.newLineAtOffset(x + (boxWidth - textWidth) / 2, y);
                     break;
             }
-            contentStream.drawString(stringToDraw);
+            contentStream.showText(text.replace("\u00A0", " "));
             contentStream.endText();
 
         } catch (IOException ex) {
@@ -188,16 +162,8 @@ public class PdfBuilder implements Style.StyleEventListener {
 
     public PdfBuilder drawLine(Coord start, Coord end) {
         try {
-            contentStream.drawLine(toUnits(start.getX()), toUnits(start.getY()),
-                    toUnits(end.getX()), toUnits(end.getY()));
-        } catch (IOException ex) {
-        }
-        return this;
-    }
-
-    public PdfBuilder drawRectangle(Coord start, int width, int height) {
-        try {
-            contentStream.fillRect(start.getY(), start.getY(), width, height);
+            contentStream.moveTo(toUnits(start.getX()), toUnits(start.getY()));
+            contentStream.lineTo(toUnits(end.getX()), toUnits(end.getY()));
         } catch (IOException ex) {
         }
         return this;
@@ -273,11 +239,7 @@ public class PdfBuilder implements Style.StyleEventListener {
     }
 
     private static float getStringWidth(Style style, final String string) throws IOException {
-        return style.getPDFont().getStringWidth(string) / 1000 * style.getSize();
-    }
-
-    private String reencodeEuros(String original) {
-        return original.replace(EURO, REENCODED_EURO);
+        return style.getPDFont().getStringWidth(string.replace("\u00A0", " ")) / 1000 * style.getSize();
     }
 
     private static Dimension getScaledDimension(Dimension imgSize, Dimension boundary) {
