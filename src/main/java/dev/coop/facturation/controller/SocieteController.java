@@ -4,7 +4,7 @@ import dev.coop.facturation.model.Societe;
 import dev.coop.facturation.persistence.SocieteRepository;
 import dev.coop.facturation.security.ConnectedUser;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.web.bind.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;

@@ -2,7 +2,6 @@ package dev.coop.facturation.controller;
 
 import dev.coop.facturation.FacturationException;
 import dev.coop.facturation.model.Client;
-import dev.coop.facturation.model.HasSocieteCodeKey;
 import dev.coop.facturation.model.SocieteCodeKey;
 import dev.coop.facturation.model.Utilisateur;
 import dev.coop.facturation.persistence.ClientRepository;
