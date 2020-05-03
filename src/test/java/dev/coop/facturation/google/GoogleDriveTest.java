@@ -22,7 +22,7 @@ public class GoogleDriveTest {
     @Test
     public void testCreate() throws IOException {
         
-        String folderId = "0B9IB8KKHBgPeUVlxRE5FMHRWMUU";
+        String folderId = "1yl-EXiPchwvojLVTGaWO9IQ_CFEGGgtN";
         String tototxt = "toto.txt";
         googleDrive.upload(folderId, tototxt, "plain/txt", "toto".getBytes());
         String toto = googleDrive.getFile(tototxt, folderId);

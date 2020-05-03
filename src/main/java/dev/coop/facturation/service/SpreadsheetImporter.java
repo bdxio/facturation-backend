@@ -1,40 +1,34 @@
 package dev.coop.facturation.service;
 
+import com.google.api.services.sheets.v4.model.Spreadsheet;
+import com.google.api.services.sheets.v4.model.ValueRange;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
-import com.google.gdata.data.spreadsheet.CustomElementCollection;
-import com.google.gdata.data.spreadsheet.ListFeed;
-import com.google.gdata.data.spreadsheet.WorksheetEntry;
-import com.google.gdata.data.spreadsheet.WorksheetFeed;
-import com.google.gdata.util.ServiceException;
-import dev.coop.facturation.model.Adresse;
-import dev.coop.facturation.model.Article;
-import dev.coop.facturation.model.Client;
-import dev.coop.facturation.model.Facture;
-import dev.coop.facturation.model.Ligne;
-import dev.coop.facturation.model.Montant;
-import dev.coop.facturation.model.Societe;
-import dev.coop.facturation.model.SocieteCodeKey;
-import dev.coop.facturation.model.TVA;
-import dev.coop.facturation.model.Unite;
+import dev.coop.facturation.model.*;
 import dev.coop.facturation.persistence.ArticleRepository;
 import dev.coop.facturation.persistence.ClientRepository;
 import dev.coop.facturation.persistence.FactureRepository;
 import dev.coop.facturation.persistence.SocieteRepository;
 import dev.coop.facturation.google.GoogleSheets;
 import dev.coop.facturation.google.GsException;
-import dev.coop.facturation.model.Devis;
 import dev.coop.facturation.persistence.DevisRepository;
 import dev.coop.facturation.tools.Dates;
 import dev.coop.facturation.tools.Numbers;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
+
+import java.io.*;
+import java.math.BigDecimal;
 import java.net.URL;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,209 +57,219 @@ public class SpreadsheetImporter {
     private Logger log = LoggerFactory.getLogger(this.getClass());
 
     public void importAll(String worksheetId) {
-        final WorksheetFeed worksheets = googleSheets.getWorksheetFeed(worksheetId);
-        importSocietes(worksheets);
-        importClients(worksheets);
-        importArticles(worksheets);
-        importFactures(worksheets);
-        importDevis(worksheets);
-
+        final Spreadsheet spreadsheet = googleSheets.fetchSpreadsheet(worksheetId);
+        importSocietes(spreadsheet);
+        importClients(spreadsheet);
+        importArticles(spreadsheet);
+        importFactures(spreadsheet);
+        importDevis(spreadsheet);
     }
 
-    public void importSocietes(WorksheetFeed feed) {
-        try {
-            final WorksheetEntry worksheet = googleSheets.getWorksheetEntry(feed, SOCIETE);
+    public void importSocietes(Spreadsheet spreadsheet) {
+        final ValueRange valueRange = googleSheets.findSheetDataBySheetTitle(spreadsheet, SOCIETE);
 
-            URL listFeedUrl = worksheet.getListFeedUrl();
-            ListFeed listFeed = googleSheets.getService().getFeed(listFeedUrl, ListFeed.class);
+        valueRange.getValues().stream()
+                .skip(1)
+                .filter(objects -> !objects.isEmpty())
+                .forEach(cells -> {
+                    String nomCourt = extractStringValue(NOM_COURT, cells, SOCIETE_COLUMNS);
+                    if (nomCourt == null || nomCourt.isEmpty()) {
+                        return;
+                    }
+                    final Societe societe = new Societe();
+                    societe.setNom(extractStringValue(NOM, cells, SOCIETE_COLUMNS))
+                            .setNomCourt(nomCourt)
+                            .setFormeJuridique(extractStringValue(FORME_JURIDIQUE, cells, SOCIETE_COLUMNS))
+                            .setDescription(extractStringValue(DESCRIPTION, cells, SOCIETE_COLUMNS))
+                            .setAdresse(importAdresse(cells, SOCIETE_COLUMNS))
+                            .setTel(extractStringValue(TEL, cells, SOCIETE_COLUMNS))
+                            .setFax(extractStringValue(FAX, cells, SOCIETE_COLUMNS))
+                            .setWeb(extractStringValue(WEB, cells, SOCIETE_COLUMNS))
+                            .setMail(extractStringValue(MAIL, cells, SOCIETE_COLUMNS))
+                            .setSiret(extractStringValue(SIRET, cells, SOCIETE_COLUMNS))
+                            .setNaf(extractStringValue(NAF, cells, SOCIETE_COLUMNS))
+                            .setNumTvaIntracom(extractStringValue(NUM_TVA_INTRACOM, cells, SOCIETE_COLUMNS))
+                            .setBic(extractStringValue(BIC, cells, SOCIETE_COLUMNS))
+                            .setIban(extractStringValue(IBAN, cells, SOCIETE_COLUMNS))
+                            .setCapital(new Montant(extractBigDecimalValue(CAPITAL, cells, SOCIETE_COLUMNS)))
+                            .setDelaiPaiement(extractIntegerValue(DELAI_PAIEMENT, cells, SOCIETE_COLUMNS));
 
-            listFeed.getEntries().stream().forEach((listEntry) -> {
-                final CustomElementCollection cel = listEntry.getCustomElements();
-                String nomCourt = cel.getValue(NOM_COURT);
-                if (nomCourt == null) {
-                    return;
-                }
-                final Societe societe = new Societe();
-                societe.setNom(cel.getValue(NOM))
-                        .setNomCourt(nomCourt)
-                        .setFormeJuridique(cel.getValue(FORME_JURIDIQUE))
-                        .setDescription(cel.getValue(DESCRIPTION))
-                        .setAdresse(importAdresse(cel))
-                        .setTel(cel.getValue(TEL))
-                        .setFax(cel.getValue(FAX))
-                        .setWeb(cel.getValue(WEB))
-                        .setMail(cel.getValue(MAIL))
-                        .setSiret(cel.getValue(SIRET))
-                        .setNaf(cel.getValue(NAF))
-                        .setNumTvaIntracom(cel.getValue(NUM_TVA_INTRACOM))
-                        .setBic(cel.getValue(BIC))
-                        .setIban(cel.getValue(IBAN))
-                        .setCapital(new Montant(Numbers.toBigDecimal(cel.getValue(CAPITAL))))
-                        .setDelaiPaiement(Numbers.toInt(cel.getValue(DELAI_PAIEMENT)));
-                String logoUrl = cel.getValue(LOGO);
+                    String logoUrl = extractStringValue(LOGO, cells, SOCIETE_COLUMNS);
 
-                try (InputStream logoInput = new URL(logoUrl).openStream()) {
-                    societe.setLogo(ByteStreams.toByteArray(logoInput));
-                } catch (MalformedURLException ex) {
-                    throw new GsException(ex);
-                } catch (IOException ex) {
-                    throw new GsException(ex);
-                }
-                societeRepository.save(societe);
-            });
-        } catch (IOException | ServiceException ex) {
-            throw new GsException(ex);
-        }
+                    Preconditions.checkNotNull(logoUrl, "Logo url is null");
+
+                    InputStream initialStream = null;
+                    try {
+                        initialStream = new URL(logoUrl).openStream();
+                        File targetFile = new File("src/main/resources/targetFile.tmp");
+                        java.nio.file.Files.copy(
+                                initialStream,
+                                targetFile.toPath(),
+                                StandardCopyOption.REPLACE_EXISTING);
+
+                        IOUtils.closeQuietly(initialStream);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    try (InputStream logoInput = new URL(logoUrl).openStream()) {
+                        societe.setLogo(ByteStreams.toByteArray(logoInput));
+                    } catch (IOException ex) {
+                        throw new GsException(ex);
+                    }
+                    societeRepository.save(societe);
+                });
     }
 
-    private static Adresse importAdresse(final CustomElementCollection cel) {
+    private static Adresse importAdresse(final List<Object> cells, Map<String, Integer> columns) {
         return new Adresse()
-                .setRue1(cel.getValue(RUE1))
-                .setRue2(cel.getValue(RUE2))
-                .setRue3(cel.getValue(RUE3))
-                .setCodePostal(cel.getValue(CODE_POSTAL))
-                .setVille(cel.getValue(VILLE))
-                .setPays(cel.getValue(PAYS));
+                .setRue1(extractStringValue(RUE1, cells, columns))
+                .setRue2(extractStringValue(RUE2, cells, columns))
+                .setRue3(extractStringValue(RUE3, cells, columns))
+                .setCodePostal(extractStringValue(CODE_POSTAL, cells, columns))
+                .setVille(extractStringValue(VILLE, cells, columns))
+                .setPays(extractStringValue(PAYS, cells, columns));
     }
 
-    public void importArticles(WorksheetFeed feed) {
-        try {
-            final WorksheetEntry worksheet = googleSheets.getWorksheetEntry(feed, ARTICLE);
+    public void importArticles(Spreadsheet spreadsheet) {
+        final ValueRange valueRange = googleSheets.findSheetDataBySheetTitle(spreadsheet, ARTICLE);
 
-            URL listFeedUrl = worksheet.getListFeedUrl();
-            ListFeed listFeed = googleSheets.getService().getFeed(listFeedUrl, ListFeed.class);
+        valueRange.getValues().stream()
+                .skip(1)
+                .filter(objects -> !objects.isEmpty())
+                .forEach(cells -> {
+                    String idValue = extractStringValue(ID, cells, ARTICLE_COLUMNS);
+                    if (idValue == null) {
+                        return;
+                    }
 
-            listFeed.getEntries().stream().forEach((listEntry) -> {
-                final CustomElementCollection cel = listEntry.getCustomElements();
-                String idValue = cel.getValue(ID);
-                if (idValue == null) {
-                    return;
-                }
+                    Societe societe = societeRepository.findByIdOrThrow(extractStringValue(SOCIETEREF, cells, ARTICLE_COLUMNS));
+                    int id = Numbers.toInt(idValue);
 
-                Societe societe = societeRepository.findByIdOrThrow(cel.getValue(SOCIETEREF));
-                int id = Numbers.toInt(idValue);
+                    Article article = new Article(societe, id)
+                            .setDescription(extractStringValue(DESCRIPTION, cells, ARTICLE_COLUMNS))
+                            .setMontant(new Montant(extractBigDecimalValue(MONTANT, cells, ARTICLE_COLUMNS)))
+                            .setTva(TVA.valueOf(extractStringValue(TVA_, cells, ARTICLE_COLUMNS)));
 
-                Article article = new Article(societe, id)
-                        .setDescription(cel.getValue(DESCRIPTION))
-                        .setMontant(new Montant(Numbers.toBigDecimal(cel.getValue(MONTANT))))
-                        .setTva(TVA.valueOf(cel.getValue(TVA_)));
+                    String unite = extractStringValue(UNITE, cells, ARTICLE_COLUMNS);
+                    if (!Strings.isNullOrEmpty(unite)) {
+                        article.setUnite(Unite.valueOf(unite));
+                    }
+                    articleRepository.save(article);
+                });
+    }
 
-                if (cel.getValue(UNITE) != null) {
-                    article.setUnite(Unite.valueOf(cel.getValue(UNITE)));
-                }
-                articleRepository.save(article);
+    public void importClients(Spreadsheet spreadsheet) {
+        final ValueRange valueRange = googleSheets.findSheetDataBySheetTitle(spreadsheet, CLIENT);
 
-            });
-        } catch (IOException | ServiceException ex) {
-            throw new GsException(ex);
+        valueRange.getValues().stream()
+                .skip(1)
+                .filter(objects -> !objects.isEmpty())
+                .forEach(cells -> {
+                    Societe societe = societeRepository.findByIdOrThrow(extractStringValue(SOCIETEREF, cells, CLIENT_COLUMNS));
+
+                    int id = extractIntegerValue(ID, cells, CLIENT_COLUMNS);
+
+                    Client client = new Client(societe, id)
+                            .setAdresse(importAdresse(cells, CLIENT_COLUMNS))
+                            .setNom(extractStringValue(NOM, cells, CLIENT_COLUMNS))
+                            .setNomCourt(extractStringValue(NOM_COURT, cells, CLIENT_COLUMNS))
+                            .setNumTVAIntracom(extractStringValue(NUM_TVA_INTRACOM, cells, CLIENT_COLUMNS));
+                    clientRepository.save(client);
+                });
+    }
+
+    public void importFactures(Spreadsheet spreadsheet) {
+        final ValueRange valueRange = googleSheets.findSheetDataBySheetTitle(spreadsheet, FACTURE);
+        final Map<Integer, Facture> factureMap = new HashMap<>();
+
+        valueRange.getValues().stream()
+                .skip(1)
+                .filter(objects -> !objects.isEmpty())
+                .forEach(cells -> {
+                    final Societe societe = societeRepository.findByIdOrThrow(extractStringValue(SOCIETEREF, cells, FACTURE_COLUMNS));
+                    final Client client = clientRepository.findByIdOrThrow(SocieteCodeKey.create(societe, extractIntegerValue(CLIENTREF, cells, FACTURE_COLUMNS)));
+                    final Article article = articleRepository.findByIdOrThrow(SocieteCodeKey.create(societe, extractIntegerValue(ARTICLEREF, cells, FACTURE_COLUMNS)));
+                    final LocalDate date = extractLocalDateValue(DATE, cells, FACTURE_COLUMNS);
+
+                    String description = extractStringValue(DESCRIPTION, cells, FACTURE_COLUMNS);
+                    description = description == null ? article.getDescription() : description;
+                    description = description.replace("${date}", date.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.FRANCE)));
+
+                    final Integer factureId = extractIntegerValue(ID, cells, FACTURE_COLUMNS);
+                    Facture facture = factureMap.get(factureId);
+                    if (facture == null) {
+                        facture = new Facture(societe, factureId)
+                                .setDate(date)
+                                .setClient(client);
+                        factureMap.put(factureId, facture);
+                    }
+                    facture.addLigne(new Ligne()
+                            .setArticle(article)
+                            .setQuantite(extractBigDecimalValue(QUANTITE, cells, FACTURE_COLUMNS))
+                            .setDescription(description));
+                    factureRepository.save(facture);
+                });
+    }
+
+
+    public void importDevis(Spreadsheet spreadsheet) {
+        final ValueRange valueRange = googleSheets.findSheetDataBySheetTitle(spreadsheet, DEVIS);
+        final Map<Integer, Devis> devisMap = new HashMap<>();
+
+        valueRange.getValues().stream()
+                .skip(1)
+                .filter(objects -> !objects.isEmpty())
+                .forEach(cells -> {
+                    final Societe societe = societeRepository.findByIdOrThrow(extractStringValue(SOCIETEREF, cells, DEVIS_COLUMNS));
+                    final Client client = clientRepository.findByIdOrThrow(SocieteCodeKey.create(societe, extractIntegerValue(CLIENTREF, cells, DEVIS_COLUMNS)));
+                    final Article article = articleRepository.findByIdOrThrow(SocieteCodeKey.create(societe, extractIntegerValue(ARTICLEREF, cells, DEVIS_COLUMNS)));
+                    final LocalDate date = extractLocalDateValue(DATE, cells, DEVIS_COLUMNS);
+
+                    String description = extractStringValue(DESCRIPTION, cells, DEVIS_COLUMNS);
+                    description = description == null ? article.getDescription() : description;
+                    description = description.replace("${date}", date.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.FRANCE)));
+
+                    final Integer devisId = extractIntegerValue(ID, cells, DEVIS_COLUMNS);
+                    Devis devis = devisMap.get(devisId);
+                    if (devis == null) {
+                        devis = new Devis(societe, devisId);
+                        devis.setDate(date);
+                        devis.setClient(client);
+                        devisMap.put(devisId, devis);
+                    }
+                    devis.addLigne(new Ligne()
+                            .setArticle(article)
+                            .setQuantite(extractBigDecimalValue(QUANTITE, cells, DEVIS_COLUMNS))
+                            .setDescription(description));
+                    devisRepository.save(devis);
+                });
+    }
+
+    private static String extractStringValue(String key, List<Object> cells, Map<String, Integer> columns) {
+        Integer columnIndex = Preconditions.checkNotNull(columns.get(key), String.format("Cannot find index for column %s", key));
+
+        if (cells.size() <= columnIndex) {
+            return null;
         }
+
+        return (String) cells.get(columnIndex);
     }
 
-    public void importClients(WorksheetFeed feed) {
-        try {
-            final WorksheetEntry worksheet = googleSheets.getWorksheetEntry(feed, CLIENT);
-
-            URL listFeedUrl = worksheet.getListFeedUrl();
-            ListFeed listFeed = googleSheets.getService().getFeed(listFeedUrl, ListFeed.class);
-
-            listFeed.getEntries().stream().forEach((listEntry) -> {
-                final CustomElementCollection cel = listEntry.getCustomElements();
-
-                Societe societe = societeRepository.findByIdOrThrow(cel.getValue(SOCIETEREF));
-                int id = Numbers.toInt(cel.getValue(ID));
-
-                Client client = new Client(societe, id)
-                        .setAdresse(importAdresse(cel))
-                        .setNom(cel.getValue(NOM))
-                        .setNomCourt(cel.getValue(NOM_COURT))
-                        .setNumTVAIntracom(cel.getValue(NUM_TVA_INTRACOM));
-                clientRepository.save(client);
-
-            });
-        } catch (IOException | ServiceException ex) {
-            throw new GsException(ex);
-        }
+    private static BigDecimal extractBigDecimalValue(String key, List<Object> cells, Map<String, Integer> columns) {
+        return Numbers.toBigDecimal(extractStringValue(key, cells, columns));
     }
 
-    public void importFactures(WorksheetFeed feed) {
-        try {
-            final WorksheetEntry worksheet = googleSheets.getWorksheetEntry(feed, FACTURE);
-
-            URL listFeedUrl = worksheet.getListFeedUrl();
-            ListFeed listFeed = googleSheets.getService().getFeed(listFeedUrl, ListFeed.class);
-
-            final Map<Integer, Facture> factureMap = new HashMap<>();
-            listFeed.getEntries().stream().forEach((listEntry) -> {
-                final CustomElementCollection cel = listEntry.getCustomElements();
-                final Societe societe = societeRepository.findByIdOrThrow(cel.getValue(SOCIETEREF));
-                final Client client = clientRepository.findByIdOrThrow(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(CLIENTREF))));
-                final Article article = articleRepository.findByIdOrThrow(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(ARTICLEREF))));
-                final LocalDate date = Dates.parse(cel.getValue(DATE));
-
-                String description = cel.getValue(DESCRIPTION);
-                description = description == null ? article.getDescription() : description;
-                description = description.replace("${date}", date.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.FRANCE)));
-
-                final Integer factureId = Numbers.toInt(cel.getValue(ID));
-                Facture facture = factureMap.get(factureId);
-                if (facture == null) {
-                    facture = new Facture(societe, factureId)
-                            .setDate(date)
-                            .setClient(client);
-                    factureMap.put(factureId, facture);
-                }
-                facture.addLigne(new Ligne()
-                        .setArticle(article)
-                        .setQuantite(Numbers.toBigDecimal(cel.getValue(QUANTITE)))
-                        .setDescription(description));
-                factureRepository.save(facture);
-            });
-
-        } catch (IOException | ServiceException ex) {
-            throw new GsException(ex);
-        }
+    private static Integer extractIntegerValue(String key, List<Object> cells, Map<String, Integer> columns) {
+        return Numbers.toInt(extractStringValue(key, cells, columns));
     }
-    
-    
-    public void importDevis(WorksheetFeed feed) {
-        try {
-            final WorksheetEntry worksheet = googleSheets.getWorksheetEntry(feed, DEVIS);
 
-            URL listFeedUrl = worksheet.getListFeedUrl();
-            ListFeed listFeed = googleSheets.getService().getFeed(listFeedUrl, ListFeed.class);
-
-            final Map<Integer, Devis> devisMap = new HashMap<>();
-            listFeed.getEntries().stream().forEach((listEntry) -> {
-                final CustomElementCollection cel = listEntry.getCustomElements();
-                final Societe societe = societeRepository.findByIdOrThrow(cel.getValue(SOCIETEREF));
-                final Client client = clientRepository.findByIdOrThrow(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(CLIENTREF))));
-                final Article article = articleRepository.findByIdOrThrow(SocieteCodeKey.create(societe, Numbers.toInt(cel.getValue(ARTICLEREF))));
-                final LocalDate date = Dates.parse(cel.getValue(DATE));
-
-                String description = cel.getValue(DESCRIPTION);
-                description = description == null ? article.getDescription() : description;
-                description = description.replace("${date}", date.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.FRANCE)));
-
-                final Integer devisId = Numbers.toInt(cel.getValue(ID));
-                Devis devis = devisMap.get(devisId);
-                if (devis == null) {
-                    devis = new Devis(societe, devisId);
-                            devis.setDate(date);
-                            devis.setClient(client);
-                    devisMap.put(devisId, devis);
-                }
-                devis.addLigne(new Ligne()
-                        .setArticle(article)
-                        .setQuantite(Numbers.toBigDecimal(cel.getValue(QUANTITE)))
-                        .setDescription(description));
-                devisRepository.save(devis);
-            });
-
-        } catch (IOException | ServiceException ex) {
-            throw new GsException(ex);
-        }
+    private static LocalDate extractLocalDateValue(String key, List<Object> cells, Map<String, Integer> columns) {
+        return Dates.parse(extractStringValue(key, cells, columns));
     }
-    
+
     private static final String FACTURE = "Facture";
     private static final String DEVIS = "Devis";
     private static final String DATE = "date";
@@ -303,4 +307,71 @@ public class SpreadsheetImporter {
     private static final String BIC = "bic";
     private static final String DELAI_PAIEMENT = "delaiPaiement";
 
+    private static final Map<String, Integer> SOCIETE_COLUMNS = ImmutableMap.<String, Integer>builder()
+            .put(NOM, 0)
+            .put(NOM_COURT, 1)
+            .put(DESCRIPTION, 2)
+            .put(FORME_JURIDIQUE, 3)
+            .put(RUE1, 4)
+            .put(RUE2, 5)
+            .put(RUE3, 6)
+            .put(CODE_POSTAL, 7)
+            .put(VILLE, 8)
+            .put(PAYS, 9)
+            .put(TEL, 10)
+            .put(FAX, 11)
+            .put(WEB, 12)
+            .put(MAIL, 13)
+            .put(SIRET, 14)
+            .put(NAF, 15)
+            .put(NUM_TVA_INTRACOM, 16)
+            .put(CAPITAL, 17)
+            .put(IBAN, 18)
+            .put(BIC, 19)
+            .put(LOGO, 20)
+            .put(DELAI_PAIEMENT, 21)
+            .build();
+
+    private static final Map<String, Integer> CLIENT_COLUMNS = ImmutableMap.<String, Integer>builder()
+            .put(ID, 0)
+            .put(SOCIETEREF, 1)
+            .put(NOM, 2)
+            .put(NOM_COURT, 3)
+            .put(RUE1, 4)
+            .put(RUE2, 5)
+            .put(RUE3, 6)
+            .put(CODE_POSTAL, 7)
+            .put(VILLE, 8)
+            .put(PAYS, 9)
+            .put(NUM_TVA_INTRACOM, 10)
+            .build();
+
+    private static final Map<String, Integer> ARTICLE_COLUMNS = ImmutableMap.<String, Integer>builder()
+            .put(ID, 0)
+            .put(SOCIETEREF, 1)
+            .put(DESCRIPTION, 2)
+            .put(MONTANT, 3)
+            .put(TVA_, 4)
+            .put(UNITE, 5)
+            .build();
+
+    private static final Map<String, Integer> FACTURE_COLUMNS = ImmutableMap.<String, Integer>builder()
+            .put(ID, 0)
+            .put(SOCIETEREF, 1)
+            .put(ARTICLEREF, 2)
+            .put(CLIENTREF, 3)
+            .put(DATE, 4)
+            .put(QUANTITE, 5)
+            .put(DESCRIPTION, 6)
+            .build();
+
+    private static final Map<String, Integer> DEVIS_COLUMNS = ImmutableMap.<String, Integer>builder()
+            .put(ID, 0)
+            .put(SOCIETEREF, 1)
+            .put(ARTICLEREF, 2)
+            .put(CLIENTREF, 3)
+            .put(DATE, 4)
+            .put(QUANTITE, 5)
+            .put(DESCRIPTION, 6)
+            .build();
 }

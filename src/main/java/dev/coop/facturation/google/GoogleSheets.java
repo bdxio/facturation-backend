@@ -1,16 +1,14 @@
 package dev.coop.facturation.google;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.gdata.client.spreadsheet.SpreadsheetService;
-import com.google.gdata.client.spreadsheet.WorksheetQuery;
-import com.google.gdata.data.spreadsheet.WorksheetEntry;
-import com.google.gdata.data.spreadsheet.WorksheetFeed;
-import com.google.gdata.util.ServiceException;
-import java.io.IOException;
-import java.net.URL;
+import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.model.Spreadsheet;
+import com.google.api.services.sheets.v4.model.ValueRange;
+import com.google.common.base.Preconditions;
+import dev.coop.facturation.configuration.GoogleConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
+
+import java.io.IOException;
 
 /**
  *
@@ -18,37 +16,42 @@ import org.springframework.util.Assert;
  */
 @Service
 public class GoogleSheets {
-
-    private SpreadsheetService service;
+    private final Sheets service;
 
     @Autowired
-    public GoogleSheets(GoogleCredential googleCredential) {
-        Assert.notNull(googleCredential);
-        service = new SpreadsheetService("compta-devcoop");
-        service.setProtocolVersion(SpreadsheetService.Versions.V3);
-        service.setOAuth2Credentials(googleCredential);
+    public GoogleSheets(GoogleConfiguration googleConfiguration) {
+        service = new Sheets.Builder(googleConfiguration.getTransport(), googleConfiguration.getJsonFactory(), googleConfiguration.getHttpRequestInitializer())
+                .setApplicationName(GoogleConfiguration.APPLICATION_NAME)
+                .build();
     }
 
-    public WorksheetEntry getWorksheetEntry(WorksheetFeed feed, String worksheetName) {
-        return feed.getEntries()
+    public ValueRange findSheetDataBySheetTitle(Spreadsheet spreadsheet, String sheetTitle) {
+        Preconditions.checkNotNull(sheetTitle);
+
+        spreadsheet.getSheets()
                 .stream()
-                .filter(w -> w.getTitle().getPlainText().equals(worksheetName))
-                .findFirst().get();
-    }
+                .filter(it -> sheetTitle.equals(it.getProperties().getTitle()))
+                .findFirst()
+                .orElseThrow(() -> new GsException(String.format("Cannot find sheets with title %s", sheetTitle)));
 
-    public WorksheetFeed getWorksheetFeed(String spreadsheetId) {
         try {
-            String path = String.format("https://spreadsheets.google.com/feeds/worksheets/%s/private/full", spreadsheetId);
-            WorksheetQuery query = new WorksheetQuery(new URL(path));
-            WorksheetFeed feed = service.query(query, WorksheetFeed.class);
-            return feed;
-        } catch (IOException | ServiceException ex) {
-            throw new GsException(ex);
+            // Fetch all sheets values
+            return service.spreadsheets().values()
+                    .get(spreadsheet.getSpreadsheetId(), sheetTitle)
+                    .execute();
+        } catch (IOException e) {
+            throw new GsException(e);
         }
     }
 
-    public SpreadsheetService getService() {
-        return service;
+    public Spreadsheet fetchSpreadsheet(String spreadsheetId) {
+        try {
+            return service.spreadsheets()
+                    .get(spreadsheetId)
+                    .setIncludeGridData(true)
+                    .execute();
+        } catch (IOException e) {
+            throw new GsException(e);
+        }
     }
-
 }
