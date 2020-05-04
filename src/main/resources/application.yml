@@ -6,6 +6,6 @@ data:
     mongodb:
         database: bdxio
     gs:
-        keyPath: bdxio-facturation-backend-46877ff9842d.json
-        # https://console.cloud.google.com/iam-admin/serviceaccounts/details/105231194108701171370?project=bdxio-facturation-backend&folder=&organizationId=&supportedpurview=project
+        keyPath: facturation-backend-3b1c801c1704.json
+        # Récupéré depuis la console google. Compte de service de bdxio@bdxio.fr
 
