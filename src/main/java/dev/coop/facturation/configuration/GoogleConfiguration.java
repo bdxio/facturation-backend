@@ -7,6 +7,7 @@ import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.common.collect.ImmutableSet;
 import dev.coop.facturation.google.GsException;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +34,7 @@ public class GoogleConfiguration implements EnvironmentAware {
     protected JacksonFactory jsonFactory;
     protected NetHttpTransport transport;
     protected HttpCredentialsAdapter httpRequestInitializer;
-    protected final Set<String> scopes = Set.of(
+    protected final Set<String> scopes = ImmutableSet.of(
             SheetsScopes.SPREADSHEETS_READONLY,
             DriveScopes.DRIVE,
             DriveScopes.DRIVE_FILE
