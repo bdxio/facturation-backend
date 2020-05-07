@@ -1,11 +1,12 @@
-
 server:
     port:  ${port:8080}
-    
+
+spring:
+    data:
+        mongodb:
+            database: bdxio
+
 data:
-    mongodb:
-        database: bdxio
     gs:
         keyPath: facturation-backend-3b1c801c1704.json
         # Récupéré depuis la console google. Compte de service de bdxio@bdxio.fr
-
