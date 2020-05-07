@@ -30,7 +30,7 @@ public class MongoConfigurationHeroku extends MongoConfiguration {
 
         Preconditions.checkNotNull(uri, String.format("Mongo URI is null, is environment variable %s define ?", MONGODB_URI));
 
-        connectionString = new ConnectionString(uri);
+        connectionString = new ConnectionString(uri + "?retryWrites=false");
         Preconditions.checkNotNull(connectionString.getDatabase(), String.format("Mongo URI does not contain a database"));
     }
 
