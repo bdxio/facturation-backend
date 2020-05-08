@@ -97,23 +97,6 @@ public class SpreadsheetImporter {
                     String logoUrl = extractStringValue(LOGO, cells, SOCIETE_COLUMNS);
 
                     Preconditions.checkNotNull(logoUrl, "Logo url is null");
-
-                    InputStream initialStream = null;
-                    try {
-                        initialStream = new URL(logoUrl).openStream();
-                        File targetFile = new File("src/main/resources/targetFile.tmp");
-                        java.nio.file.Files.copy(
-                                initialStream,
-                                targetFile.toPath(),
-                                StandardCopyOption.REPLACE_EXISTING);
-
-                        IOUtils.closeQuietly(initialStream);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
                     try (InputStream logoInput = new URL(logoUrl).openStream()) {
                         societe.setLogo(ByteStreams.toByteArray(logoInput));
                     } catch (IOException ex) {
