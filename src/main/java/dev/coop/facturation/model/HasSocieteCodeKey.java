@@ -24,7 +24,7 @@ public abstract class HasSocieteCodeKey extends HasCode {
     @PersistenceConstructor
     public HasSocieteCodeKey(SocieteCodeKey id) {
         this.id = id;
-        setCode(codeValue);
+        setCode(id.getCodeValue());
     }
    
     public HasSocieteCodeKey(Societe societe, int codeValue) {
