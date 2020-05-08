@@ -12,7 +12,7 @@ public class MongoConfigurationDefault extends MongoConfiguration implements Env
 
     @Override
     protected String getDatabaseName() {
-        return environment.getProperty("data.mongodb.database");
+        return environment.getProperty("spring.data.mongodb.database");
     }
 
     @Override
