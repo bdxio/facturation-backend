@@ -9,12 +9,13 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.collect.ImmutableSet;
 import dev.coop.facturation.google.GsException;
-import org.springframework.context.EnvironmentAware;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.util.Base64Utils;
 
 import javax.annotation.PostConstruct;
-import java.io.FileNotFoundException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
@@ -24,45 +25,41 @@ import java.util.Set;
  * @author lfo
  */
 @Configuration
-public class GoogleConfiguration implements EnvironmentAware {
+public class GoogleConfiguration {
     public static final String APPLICATION_NAME = "facturation-backend";
 
-    protected GoogleCredentials googleCredentials;
-    protected String keyPath;
-    protected Environment environment;
-
-    protected JacksonFactory jsonFactory;
-    protected NetHttpTransport transport;
-    protected HttpCredentialsAdapter httpRequestInitializer;
-    protected final Set<String> scopes = ImmutableSet.of(
+    private static final Set<String> SCOPES = ImmutableSet.of(
             SheetsScopes.SPREADSHEETS_READONLY,
             DriveScopes.DRIVE,
             DriveScopes.DRIVE_FILE
     );
 
+    private final Environment environment;
+
+    private JacksonFactory jsonFactory;
+    private NetHttpTransport transport;
+    private HttpCredentialsAdapter httpRequestInitializer;
+
+    @Autowired
+    public GoogleConfiguration(Environment environment) {
+        this.environment = environment;
+    }
+
     @PostConstruct
     public void setup() throws GeneralSecurityException, IOException {
         jsonFactory = JacksonFactory.getDefaultInstance();
         transport = GoogleNetHttpTransport.newTrustedTransport();
-        googleCredentials = buildCredential();
+        final GoogleCredentials googleCredentials = buildCredentials();
         httpRequestInitializer = new HttpCredentialsAdapter(googleCredentials);
     }
 
-    @Override
-    public void setEnvironment(Environment e) {
-        this.environment = e;
-        keyPath = environment.getProperty("data.gs.keyPath");
-    }
-
-    public GoogleCredentials buildCredential() {
-        InputStream in = GoogleConfiguration.class.getClassLoader().getResourceAsStream(keyPath);
+    private GoogleCredentials buildCredentials() {
         try {
-            if (in == null) {
-                throw new FileNotFoundException(String.format("Resource not found: %s", keyPath));
-            }
-
-            return googleCredentials = GoogleCredentials.fromStream(in)
-                    .createScoped(scopes);
+            final String googleAccount = environment.getRequiredProperty("google.account");
+            final byte[] decodedGoogleAccount = Base64Utils.decodeFromString(googleAccount);
+            final InputStream inputStream = new ByteArrayInputStream(decodedGoogleAccount);
+            return GoogleCredentials.fromStream(inputStream)
+                    .createScoped(SCOPES);
         } catch (IOException e) {
             throw new GsException(e);
         }
