@@ -34,3 +34,13 @@ _Note :_ it is also possible to deploy from GitHub but you'll first need to push
 ### Provisioning
 
 To provision the application you need to create a new Heroku application and enable the mLab MongoDB add-on.
+
+## Local
+
+To use locally the application you just have to start a local MongoDB instance using `docker-compose`:
+```
+docker-compose up
+```
+
+Then configure the Google service account to use in [application.yaml](./src/main/resources/application.yaml) 
+and start the application.
