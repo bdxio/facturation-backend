@@ -10,6 +10,19 @@ You'll also need to create an environment variable called `GOOGLE_ACCOUNT` which
 
 See https://developers.google.com/identity/protocols/oauth2/service-account for more information on service account.
 
+To create a service account :
+1. go to [Google Cloud Platform Console](https://console.cloud.google.co)
+2. create a new project, called for example "bdxio-facturation-backend"
+3. go to APIs & Services to enable Google Drive API and Google Sheets API
+4. go to IAM & Admin > Service Accounts to create a service account, called for example "bdxio-facturation-backend" 
+5. generate a new key and download the JSON file containing the private key
+6. generate a properties file containing the JSON content encoded in Base64 :
+
+    `echo google.account=$(cat <FILE>.json | base64 --wrap=0) >src/test/resources/google.properties`
+
+DO NOT COMMIT THIS FILE !
+I REPEAT, DO NOT COMMIT THIS FILE !!
+
 To create the variable in Heroku you can use this command :
 ```bash
 heroku config:set --app=ancient-reaches-59814 GOOGLE_ACCOUNT=$(cat service-account.json | base64 -w 0)

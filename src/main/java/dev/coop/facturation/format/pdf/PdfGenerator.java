@@ -55,8 +55,8 @@ public abstract class PdfGenerator {
         insertCoordBancaire(pdf, facture.getSociete());
         insertSocieteInfoAdmin(pdf, facture.getSociete());
 
-        try {
-            pdf.toDocument().save(out);
+        try (var doc = pdf.toDocument()){
+            doc.save(out);
         } catch (IOException ex) {
             throw new FacturationException(ex);
         }

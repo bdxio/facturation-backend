@@ -115,6 +115,7 @@ public class PdfBuilder implements Style.StyleEventListener {
             if (style.getBackgroundColor() != null && !style.getBackgroundColor().equals(Color.WHITE)) {
                 contentStream.setNonStrokingColor(style.getBackgroundColor());
                 contentStream.addRect(x, y - Coord.computeHeight(style), boxWidth - borderSize, boxHeight - borderSize);
+                contentStream.fill();
                 contentStream.setNonStrokingColor(style.getColor());
             }
 
