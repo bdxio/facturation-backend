@@ -6,6 +6,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import dev.coop.facturation.configuration.GoogleConfiguration;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.UUID;
  *
  * @author lfo
  */
+@Slf4j
 @Service
 public class GoogleDrive {
 
@@ -46,7 +48,7 @@ public class GoogleDrive {
                 .setSupportsTeamDrives(true);
         MediaHttpUploader uploader = create.getMediaHttpUploader();
         uploader.setDirectUploadEnabled(true);
-//        uploader.setProgressListener(new FileUploadProgressListener());
+
         create.execute();
     }
 

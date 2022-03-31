@@ -1,7 +1,5 @@
 package dev.coop.facturation.model;
 
-import org.springframework.data.annotation.Transient;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
@@ -53,7 +51,6 @@ public class Montant {
         return valeur == null ? BigDecimal.ZERO : valeur;
     }
 
-    @Transient
     public Monnaie getMonnaie() {
         return monnaie;
     }

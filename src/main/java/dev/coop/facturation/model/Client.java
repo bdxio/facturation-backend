@@ -1,12 +1,13 @@
 package dev.coop.facturation.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import org.springframework.data.annotation.PersistenceConstructor;
+import lombok.ToString;
 
 /**
  *
  * @author lforet
  */
+@ToString
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class Client extends HasSocieteCodeKey {
         
@@ -16,7 +17,6 @@ public class Client extends HasSocieteCodeKey {
     
     private Adresse adresse;
 
-    @PersistenceConstructor
     public Client(SocieteCodeKey id) {
         super(id);
     }
@@ -24,7 +24,12 @@ public class Client extends HasSocieteCodeKey {
     public Client(Societe societe, int codeValue) {
         super(societe, codeValue);
     }
-    
+
+    @Override
+    public void updateCode() {
+        this.setCode(this.getCodeValue());
+    }
+
     @Override
     public CodeFormatter.Prefix getCodePrefix() {
         return CodeFormatter.Prefix.CL;

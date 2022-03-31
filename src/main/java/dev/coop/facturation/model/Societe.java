@@ -1,11 +1,11 @@
 package dev.coop.facturation.model;
 
-import org.springframework.data.annotation.Id;
+import lombok.ToString;
 
+@ToString
 public class Societe {
 
     private String nom;
-    @Id
     private String nomCourt;
     private String description;
     private String formeJuridique;

@@ -2,3 +2,5 @@ target
 .idea
 *.iml
 *.log
+src/test/resources/google.properties
+

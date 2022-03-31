@@ -55,8 +55,8 @@ public abstract class PdfGenerator {
         insertCoordBancaire(pdf, facture.getSociete());
         insertSocieteInfoAdmin(pdf, facture.getSociete());
 
-        try {
-            pdf.toDocument().save(out);
+        try (var doc = pdf.toDocument()){
+            doc.save(out);
         } catch (IOException ex) {
             throw new FacturationException(ex);
         }
@@ -111,7 +111,8 @@ public abstract class PdfGenerator {
         pdf.setCoord(FACTURE_COORD.copy());
         PdfTableBuilder headerTable = pdf.createTableBuilder(new int[]{40, 100});
         pdf.style().huge().bold();
-        headerTable.printCell(facture.getCodePrefix().getDescription()).printCell(facture.getCode());
+        headerTable.printCell(facture.getCodePrefix().getDescription())
+                .printCell(facture.getCode());
         pdf.style().normal();
         headerTable.printCell("Date : ").printCell(facture.getDate().format(DATE_FORMAT));
         if (facture.getSociete().getDelaiPaiement() > 0) {

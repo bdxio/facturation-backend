@@ -12,7 +12,7 @@ public abstract class HasCode {
         return code;
     }
 
-    protected void setCode(int codeValue) {
+    public void setCode(int codeValue) {
         this.code = CodeFormatter.INSTANCE.format(getCodePrefix(), codeValue);
     }
      

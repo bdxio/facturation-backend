@@ -11,7 +11,11 @@ import dev.coop.facturation.persistence.SocieteRepository;
 import dev.coop.facturation.service.SpreadsheetImporter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author lfo
  */
+@Slf4j
 @RestController
 @RequestMapping("google")
 public class GoogleController {
@@ -40,31 +45,70 @@ public class GoogleController {
 
     @RequestMapping("importInMongo/{worksheetId}")
     public void importSheet(@PathVariable String worksheetId) {
+        log.info("google/importInMongo/{}", worksheetId);
         societeRepository.deleteAll();
         factureRepository.deleteAll();
+        devisRepository.deleteAll();
         importer.importAll(worksheetId);
     }
 
     @RequestMapping("generateInDrive/{societeName}/{folderId}")
     public void generateInDrive(@PathVariable String societeName, @PathVariable String folderId) {
-        Societe societe = societeRepository.findById(societeName)
-                .orElseThrow(() -> new IllegalStateException(String.format("La société avec le nom %s est inconnue", societeName)));
+        try{
+            List<Facture> factures = getFacturesBySociety(societeName);
+            Map<String, byte[]> facturesToUpload = createFileToUpload(folderId, factures);
+            uploadFileToDrive(folderId, facturesToUpload);
+        } catch (IOException io) {
+            throw new RuntimeException(io);
+        }
+    }
 
-        List<Facture> factures = factureRepository.findBySociete(societe);
-        factures.addAll(devisRepository.findBySociete(societe));
-        factures.forEach(facture -> {
-            PdfGenerator generator = composer.getComposer(societe);
-            String fileName = PdfGenerator.getFileName(facture);
+    private void uploadFileToDrive(final String folderId, final Map<String, byte[]> facturesToUpload) throws IOException {
+        for(Map.Entry<String, byte[]> facture : facturesToUpload.entrySet()){
+            googleDrive.upload(folderId, facture.getKey(), "application/pdf", facture.getValue());
+            log.info("{} - Write {}", folderId, facture.getKey());
+        }
+    }
+
+    Map<String, byte[]> createFileToUpload(final String folderId, final List<Facture> factures) {
+        Map<String, byte[]> facturesToUpload = new HashMap<>();
+        for (Facture facture : factures) {
             try {
+                String fileName = PdfGenerator.getFileName(facture);
                 if (googleDrive.getFile(fileName, folderId) == null) {
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    generator.generate(facture, out);
-                    googleDrive.upload(folderId, fileName, "application/pdf", out.toByteArray());
+                    byte[] file = createFile(facture);
+                    facturesToUpload.put(fileName, file);
+
                 }
             } catch (IOException io) {
                 throw new RuntimeException(io);
             }
-        });
+        }
+        return facturesToUpload;
     }
 
+    List<Facture> getFacturesBySociety(final String societeName) {
+        Societe societe = societeRepository.findByIdOrThrow(societeName);
+
+        List<Facture> factures = factureRepository.findBySociete(societe);
+        factures.addAll(devisRepository.findBySociete(societe));
+        return factures;
+    }
+
+    byte[] createFile(final Facture facture) {
+        PdfGenerator generator = composer.getComposer(facture.getSociete());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        generator.generate(facture, out);
+        byte[] file = out.toByteArray();
+        return file;
+    }
+
+
+    /**
+     * For testing purpose!
+     * @param googleDrive
+     */
+    void setGoogleDrive(final GoogleDrive googleDrive) {
+        this.googleDrive = googleDrive;
+    }
 }

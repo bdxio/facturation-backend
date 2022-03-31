@@ -22,32 +22,30 @@ public class DevcoopInitializer {
     private ArticleRepository articleRepository;
     @Autowired
     private FactureRepository factureRepository;
-    @Autowired
-    private UtilisateurRepository utilisateurRepository;
 
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    Societe devcoop = new Societe()
-            .setNom(DEVCOOP_CONSULTING)
-            .setNomCourt(DEVCOOP)
-            .setDescription("SCOP sarl à capital variable")
-            .setCapital(new Montant(22600))
-            .setNaf("6201Z")
-            .setNumTvaIntracom("FR66517865655")
-            .setSiret("51786565500024")
-            .setAdresse(new Adresse()
-                    .setRue1("228 avenue de Cadaujac")
-                    .setCodePostal("33850")
-                    .setVille("LÉOGNAN"))
-            .setTel("+33663285980")
-            .setMail("contact@devcoop.fr")
-            .setWeb("http://www.dev.coop")
-            .setLogo(ByteStreams.toByteArray(this.getClass().getClassLoader().getResourceAsStream("devcoop.jpg")));
+    Societe devcoop = getSociete();
 
-    Utilisateur utilisateur = new Utilisateur()
-            .setLogin(LAURENT)
-            .setPassword(passwordEncoder.encode("password"))
-            .setSociete(devcoop);
+    public Societe getSociete() throws IOException {
+        return new Societe()
+                .setNom(DEVCOOP_CONSULTING)
+                .setNomCourt(DEVCOOP)
+                .setDescription("SCOP sarl à capital variable")
+                .setCapital(new Montant(22600))
+                .setNaf("6201Z")
+                .setNumTvaIntracom("FR66517865655")
+                .setSiret("51786565500024")
+                .setAdresse(new Adresse()
+                        .setRue1("228 avenue de Cadaujac")
+                        .setCodePostal("33850")
+                        .setVille("LÉOGNAN"))
+                .setTel("+33663285980")
+                .setMail("contact@devcoop.fr")
+                .setWeb("http://www.dev.coop")
+                .setLogo(ByteStreams.toByteArray(this.getClass().getClassLoader().getResourceAsStream("devcoop.jpg")));
+    }
+
 
     Client intitek = new Client(devcoop, 12)
             .setNom("Intitek")
@@ -85,7 +83,6 @@ public class DevcoopInitializer {
         
         clean();
         societeRepository.save(devcoop);
-        utilisateurRepository.save(utilisateur);
         clientRepository.save(intitek);
         clientRepository.save(onePoint);
         articleRepository.save(article);
@@ -97,7 +94,6 @@ public class DevcoopInitializer {
         clientRepository.deleteAll();
         factureRepository.deleteAll();
         societeRepository.deleteAll();
-        utilisateurRepository.deleteAll();
     }
     
     public static final String LAURENT = "laurent";

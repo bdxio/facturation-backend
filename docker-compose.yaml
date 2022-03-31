@@ -1,8 +1,0 @@
-version: '3.7'
-
-services:
-  mongo:
-    image: mongo:3.6
-    container_name: facturation_backend_mongo
-    ports:
-      - 27017:27017

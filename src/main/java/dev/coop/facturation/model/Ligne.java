@@ -1,8 +1,11 @@
 package dev.coop.facturation.model;
 
+import lombok.ToString;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+@ToString
 public class Ligne {
 
     private Article article;
@@ -80,5 +83,11 @@ public class Ligne {
     public Montant getMontantTva() {
         return getMontantHT().multiply(getTva().getTaux());
     }
-    
+
+
+    public void updateArticleCode() {
+        if(this.article != null){
+            this.article.setCode(this.article.getCodeValue());
+        }
+    }
 }

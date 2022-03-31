@@ -18,9 +18,6 @@ public class SecurityConfiguration
     extends WebSecurityConfigurerAdapter 
 {
 
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
-
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Bean
@@ -30,7 +27,7 @@ public class SecurityConfiguration
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
+
     }
 
     @Override

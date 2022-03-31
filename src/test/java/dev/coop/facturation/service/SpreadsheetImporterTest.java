@@ -12,7 +12,11 @@ import dev.coop.facturation.persistence.DevisRepository;
 import dev.coop.facturation.persistence.FactureRepository;
 import dev.coop.facturation.persistence.SocieteRepository;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -39,8 +43,15 @@ public class SpreadsheetImporterTest {
     private DevisRepository devisRepository;
     @Autowired
     private PdfComposer pdfComposer;
-    @Autowired
+    @Mock
     private GoogleDrive googleDrive;
+
+    @BeforeEach
+    public void beforeEach() throws IOException {
+        //prevent all google drive write!
+        Mockito.doNothing().when(googleDrive).upload(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
 
     @Test
     public void test() {
