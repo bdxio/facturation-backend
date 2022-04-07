@@ -12,6 +12,8 @@ import dev.coop.facturation.service.SpreadsheetImporter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author lfo
  */
+@Slf4j
 @RestController
 @RequestMapping("google")
 public class GoogleController {
@@ -40,6 +43,7 @@ public class GoogleController {
 
     @RequestMapping("importInMongo/{worksheetId}")
     public void importSheet(@PathVariable String worksheetId) {
+        log.info("google/importInMongo/{}", worksheetId);
         societeRepository.deleteAll();
         factureRepository.deleteAll();
         devisRepository.deleteAll();

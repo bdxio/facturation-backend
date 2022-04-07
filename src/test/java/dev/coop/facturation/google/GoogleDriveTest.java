@@ -21,10 +21,12 @@ public class GoogleDriveTest {
     
     @Test
     public void testCreate() throws IOException {
-        
+
+
         String folderId = "1-Owr1AUhBm9E00NdhiK0z_7A06J6WAmY";
         String tototxt = "toto.txt";
-//        googleDrive.upload(folderId, tototxt, "plain/txt", "toto".getBytes());
+//        googleDrive.upload(folderId, tototxt, "plain/txt", "toto".getBytes()); //remove
+
         String toto = googleDrive.getFile(tototxt, folderId);
         googleDrive.deleteFile(toto);
 
