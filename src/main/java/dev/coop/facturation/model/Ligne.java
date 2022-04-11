@@ -1,8 +1,11 @@
 package dev.coop.facturation.model;
 
+import lombok.ToString;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+@ToString
 public class Ligne {
 
     private Article article;

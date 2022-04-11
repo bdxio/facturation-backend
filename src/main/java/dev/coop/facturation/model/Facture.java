@@ -1,5 +1,6 @@
 package dev.coop.facturation.model;
 
+import lombok.ToString;
 import org.springframework.data.annotation.PersistenceConstructor;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import java.util.List;
  *
  * @author lforet
  */
+@ToString
 public class Facture extends HasSocieteCodeKey {
 
     private Client client;

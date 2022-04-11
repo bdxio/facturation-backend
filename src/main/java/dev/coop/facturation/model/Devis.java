@@ -1,5 +1,6 @@
 package dev.coop.facturation.model;
 
+import lombok.ToString;
 import org.springframework.data.annotation.PersistenceConstructor;
 
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.List;
  *
  * @author lfo
  */
+@ToString
 public class Devis extends Facture {
 
     @PersistenceConstructor

@@ -1,5 +1,8 @@
 package dev.coop.facturation.model;
 
+import lombok.ToString;
+
+@ToString
 public class Adresse {
 
     private String rue1;

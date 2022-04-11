@@ -1,12 +1,14 @@
 package dev.coop.facturation.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import lombok.ToString;
 import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  *
  * @author lforet
  */
+@ToString
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class Client extends HasSocieteCodeKey {
         

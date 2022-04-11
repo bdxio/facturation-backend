@@ -2,8 +2,10 @@ package dev.coop.facturation.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import lombok.ToString;
 import org.springframework.data.annotation.PersistenceConstructor;
 
+@ToString
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class Article extends HasSocieteCodeKey {
 
