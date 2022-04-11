@@ -48,9 +48,8 @@ public class GoogleDrive {
                 .setSupportsTeamDrives(true);
         MediaHttpUploader uploader = create.getMediaHttpUploader();
         uploader.setDirectUploadEnabled(true);
-//        uploader.setProgressListener(new FileUploadProgressListener());
-        //TODO uncomment        create.execute();
-        log.error("TODO Google Drive should be executed.");
+
+        create.execute();
     }
 
     public String getFile(String name, String parentId) throws IOException {

@@ -2,7 +2,10 @@ package dev.coop.facturation.google;
 
 import dev.coop.facturation.Facturation;
 import java.io.IOException;
+
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,19 +20,20 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class GoogleDriveTest {
     @Autowired
     private GoogleDrive googleDrive;
-    
-    
+
+    /**
+     * You can run it sometimes manually to not
+     */
+    @Ignore()
     @Test
     public void testCreate() throws IOException {
-
-
         String folderId = "1-Owr1AUhBm9E00NdhiK0z_7A06J6WAmY";
         String tototxt = "toto.txt";
-//        googleDrive.upload(folderId, tototxt, "plain/txt", "toto".getBytes()); //remove
+        googleDrive.upload(folderId, tototxt, "plain/txt", "toto".getBytes());
 
         String toto = googleDrive.getFile(tototxt, folderId);
         googleDrive.deleteFile(toto);
-
-       
+        Assertions.assertEquals(tototxt, toto);
     }
+
 }

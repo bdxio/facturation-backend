@@ -37,20 +37,6 @@ class GoogleControllerTest {
         googleController.setGoogleDrive(driveMock);
     }
 
-
-    @Test
-    void importSheetTest() {
-        googleController.importSheet(WORKSHEET_ID);
-    }
-
-
-    @Test
-    void generateInDriveTest() {
-        googleController.importSheet(WORKSHEET_ID);
-        googleController.generateInDrive(BDXIO, GOOGLE_DRIVE_FOLDERID);
-        // if call real, we must delete files :s
-    }
-
     @Test
     void getFacturesBySociety() {
         googleController.importSheet(WORKSHEET_ID);
