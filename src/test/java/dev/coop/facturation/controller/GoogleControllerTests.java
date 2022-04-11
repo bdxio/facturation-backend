@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(locations = "classpath:/google.properties")
+//@TestPropertySource(locations = "classpath:/google.properties") // use application.yml in test resources.
 /*
   TODO:
   - cleanup le test :-)
@@ -97,9 +97,9 @@ class GoogleControllerTests {
                     .map(file -> new GeneratedPDF(file.getName(), getPDFHash(file)))
                     .collect(Collectors.toList());
             assertThat(generatedPDFs).containsExactlyInAnyOrder(
-                    new GeneratedPDF("FA00210001-BDXIO-Client1.pdf", "4509f0d3c002fb9fa577f952789b25c3513627c448a5793a8f97d80bbe0a434d"),
-                    new GeneratedPDF("FA00210002-BDXIO-Client2.pdf", "fc2b9802d5c6a86aed1fb9dbe46e25dac90cab9cc7873bf2703e4446a1af290e"),
-                    new GeneratedPDF("DE00210001-BDXIO-Client1.pdf", "ae1c29a15acf120c7b532d9aba66f13228a1aede13cbc50f427a61bfa64d0c27")
+                    new GeneratedPDF("DE00210001-BDXIO-Client1.pdf", "d1d97ddfa7ad8bfa2535a41f71beb63d2511b8a538e49280f0637884bd42d62f"),
+                    new GeneratedPDF("FA00210002-BDXIO-Client2.pdf", "524017f351090a9a53c1ffe3029394d0677a497b76dfb09b840f01dcdee92658"),
+                    new GeneratedPDF("FA00210001-BDXIO-Client1.pdf", "d45af87e152fb2df42d6af0dd99463e484d347c617431b288f9f35403e78efcf")
             );
         } catch (IOException e) {
             throw new RuntimeException(e);

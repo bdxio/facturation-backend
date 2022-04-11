@@ -1,0 +1,10 @@
+server:
+    port: ${port:8080}
+
+spring:
+    data:
+        mongodb:
+            database: bdxio
+
+google:
+    account:

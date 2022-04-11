@@ -42,6 +42,7 @@ public class GoogleController {
     public void importSheet(@PathVariable String worksheetId) {
         societeRepository.deleteAll();
         factureRepository.deleteAll();
+        devisRepository.deleteAll();
         importer.importAll(worksheetId);
     }
 
