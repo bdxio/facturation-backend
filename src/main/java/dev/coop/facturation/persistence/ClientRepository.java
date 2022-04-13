@@ -1,17 +1,13 @@
 package dev.coop.facturation.persistence;
 
 import dev.coop.facturation.model.Client;
-import dev.coop.facturation.model.Societe;
-import dev.coop.facturation.model.SocieteCodeKey;
-import java.util.List;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Component;
 
-public interface ClientRepository extends MongoRepository<Client, SocieteCodeKey> {
-    
-    List<Client> findBySociete(Societe societe);
+@Component
+public class ClientRepository extends InMemoryRepository<Client> {
 
-    default Client findByIdOrThrow(SocieteCodeKey id) {
-        return this.findById(id)
-                .orElseThrow(() -> new IllegalStateException(String.format("Le client %s est inconnue", id)));
+    @Override
+    protected String getEntityName() {
+        return "Client";
     }
 }

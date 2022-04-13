@@ -4,6 +4,7 @@ import dev.coop.facturation.Facturation;
 import dev.coop.facturation.google.GoogleDrive;
 import dev.coop.facturation.model.Facture;
 import org.approvaltests.Approvals;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -42,6 +43,9 @@ class GoogleControllerTest {
         googleController.importSheet(WORKSHEET_ID);
         List<Facture> facturesBySociety = googleController.getFacturesBySociety(BDXIO);
         Approvals.verifyAll("facturesBySociety", facturesBySociety);
+        for(Facture facture: facturesBySociety){
+            Assertions.assertNotNull(facture.getCode());
+        }
     }
 
     @Test

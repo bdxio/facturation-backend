@@ -45,6 +45,8 @@ public abstract class HasSocieteCodeKey extends HasCode {
         id.setSociete(societe.getNomCourt());
         this.societe = societe;
     }
-   
-    
+
+    public SocieteCodeKey getId() {
+        return id;
+    }
 }
