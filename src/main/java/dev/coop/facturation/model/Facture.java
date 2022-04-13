@@ -1,7 +1,6 @@
 package dev.coop.facturation.model;
 
 import lombok.ToString;
-import org.springframework.data.annotation.PersistenceConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,12 +16,9 @@ public class Facture extends HasSocieteCodeKey {
 
     private Client client;
     private LocalDate date;
-//    private LocalDate dateEcheance;
-//    private Date date;
     private final List<Ligne> lignes;
     private final List<Ligne> ristournes;
 
-    @PersistenceConstructor
     public Facture(SocieteCodeKey id, List<Ligne> lignes, List<Ligne> ristournes) {
         super(id);
         this.lignes = lignes;
@@ -33,6 +29,17 @@ public class Facture extends HasSocieteCodeKey {
         super(societe, codeValue);
         this.lignes = new ArrayList<>();
         this.ristournes = new ArrayList<>();
+    }
+
+    @Override
+    public void updateCode() {
+        this.setCode(this.getCodeValue());
+        for(Ligne l : lignes){
+            l.updateArticleCode();
+        }
+        for(Ligne l : ristournes){
+            l.updateArticleCode();
+        }
     }
 
     @Override

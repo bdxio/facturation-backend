@@ -83,5 +83,11 @@ public class Ligne {
     public Montant getMontantTva() {
         return getMontantHT().multiply(getTva().getTaux());
     }
-    
+
+
+    public void updateArticleCode() {
+        if(this.article != null){
+            this.article.setCode(this.article.getCodeValue());
+        }
+    }
 }

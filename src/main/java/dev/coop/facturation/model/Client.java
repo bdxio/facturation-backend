@@ -2,7 +2,6 @@ package dev.coop.facturation.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import lombok.ToString;
-import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  *
@@ -18,7 +17,6 @@ public class Client extends HasSocieteCodeKey {
     
     private Adresse adresse;
 
-    @PersistenceConstructor
     public Client(SocieteCodeKey id) {
         super(id);
     }
@@ -26,7 +24,12 @@ public class Client extends HasSocieteCodeKey {
     public Client(Societe societe, int codeValue) {
         super(societe, codeValue);
     }
-    
+
+    @Override
+    public void updateCode() {
+        this.setCode(this.getCodeValue());
+    }
+
     @Override
     public CodeFormatter.Prefix getCodePrefix() {
         return CodeFormatter.Prefix.CL;

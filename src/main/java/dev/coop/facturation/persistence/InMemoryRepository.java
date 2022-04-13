@@ -37,7 +37,7 @@ public abstract class InMemoryRepository<T extends HasSocieteCodeKey> {
         return repo.values().stream()
                 .filter(a -> a.getSociete().getNomCourt().equals(societe.getNomCourt()))
                 .sorted(Comparator.comparingInt(HasSocieteCodeKey::getCodeValue))
-                .peek(item -> item.setCode(item.getCodeValue()))//replace mongo db PersistenceConstructor trick :(
+                .peek(item -> item.updateCode())//replace mongo db PersistenceConstructor trick :(
                 .collect(Collectors.toList());
     }
 
