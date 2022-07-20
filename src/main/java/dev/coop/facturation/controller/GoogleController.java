@@ -5,6 +5,8 @@ import dev.coop.facturation.format.pdf.PdfGenerator;
 import dev.coop.facturation.google.GoogleDrive;
 import dev.coop.facturation.model.Facture;
 import dev.coop.facturation.model.Societe;
+import dev.coop.facturation.persistence.ArticleRepository;
+import dev.coop.facturation.persistence.ClientRepository;
 import dev.coop.facturation.persistence.DevisRepository;
 import dev.coop.facturation.persistence.FactureRepository;
 import dev.coop.facturation.persistence.SocieteRepository;
@@ -35,6 +37,10 @@ public class GoogleController {
     @Autowired
     private SocieteRepository societeRepository;
     @Autowired
+    private ClientRepository clientRepository;
+    @Autowired
+    private ArticleRepository articleRepository;
+    @Autowired
     private FactureRepository factureRepository;
     @Autowired
     private DevisRepository devisRepository;
@@ -47,6 +53,8 @@ public class GoogleController {
     public void importSheet(@PathVariable String worksheetId) {
         log.info("google/importInMongo/{}", worksheetId);
         societeRepository.deleteAll();
+        clientRepository.deleteAll();
+        articleRepository.deleteAll();
         factureRepository.deleteAll();
         devisRepository.deleteAll();
         importer.importAll(worksheetId);
