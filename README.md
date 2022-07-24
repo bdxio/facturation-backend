@@ -48,7 +48,41 @@ _Note :_ it is also possible to deploy from GitHub but you'll first need to push
 
 To provision the application you need to create a new Heroku application.
 
+## Usage
+
+The application has two HTTP endpoints:
+
+1. one to import the spreadsheet (in memory)
+2. one to generate the invoices as PDF
+
+### Spreadsheet import
+
+Hit http://BASE_URL/importInMongo/{worksheetId} to import the spreadsheet in the in-memory database.
+
+`worksheetId` is the id of the spreadsheet to import. It can be found when opened in Google Drive, in the URL.
+
+### Invoices generation
+
+Hit http://BASE_URL/generateInDrive/{worksheetId}/{folderId} to generate the invoices in PDF format.
+
+`worksheetId` is the id of the spreadsheet containing the invoices to generate.
+`folderId` is the id of the folder where the generated invoices should be put.
+
+Both ids can be found in Google Drive when opening the spreadsheet or the folder, their id is in the URL.
+
+Only new invoices will be generated.  
+To generate again an existing invoice remove the previous one.
+
 ## Local
 
 To use locally the application you just have to configure the Google service account to use in [application.yaml](./src/main/resources/application.yaml) 
 and start the application.
+
+You can use the service account to use the production spreadsheet and then hit your local application to generate the invoices on Google Drive.  
+To retrieve the service account credentials you can use the Heroku cli:
+```sh
+heroku config:get GOOGLE_ACCOUNT
+```
+
+Put the retrieved value as is in the application.yaml configuration file.
+
