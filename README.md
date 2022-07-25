@@ -40,7 +40,7 @@ To deploy it you just have to follow these steps :
 2. ask for Heroku access
 3. `heroku login` to login
 4. `heroku git:remote --app=<HEROKU APP>` to add Heroku as Git remote
-5. `git push heroku` to deploy your current master branch or `git push heroku <BRANCH>:master` to deploy your branch named <BRANCH> to Heroku (_only Heroku master branch is deployed_).
+5. `git push heroku` to deploy your current main branch or `git push heroku <BRANCH>:main` to deploy your branch named <BRANCH> to Heroku (_only Heroku main branch is deployed_).
 
 _Note :_ it is also possible to deploy from GitHub but you'll first need to push the branch to GitHub.
 
