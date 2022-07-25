@@ -16,6 +16,7 @@ public class Facture extends HasSocieteCodeKey {
 
     private Client client;
     private LocalDate date;
+    private Integer acompte;
     private final List<Ligne> lignes;
     private final List<Ligne> ristournes;
 
@@ -44,7 +45,10 @@ public class Facture extends HasSocieteCodeKey {
 
     @Override
     public CodeFormatter.Prefix getCodePrefix() {
-        return CodeFormatter.Prefix.FA;
+        if (acompte == null || acompte == 0) {
+            return CodeFormatter.Prefix.FA;
+        }
+        return CodeFormatter.Prefix.FAC;
     }
 
     public Client getClient() {
@@ -111,4 +115,8 @@ public class Facture extends HasSocieteCodeKey {
         return total;
     }
 
+    public Facture setAcompte(Integer acompte) {
+        this.acompte = acompte;
+        return this;
+    }
 }

@@ -12,15 +12,15 @@ public enum CodeFormatter {
 
     public enum Prefix {
 
-        FA(8, "Facture"), CL(5, "Client"), AR(5, "Article"), DE(8, "Devis");
+        FA(8, "Facture"),
+        FAC(8, "Facture d'acompte"),
+        CL(5, "Client"),
+        AR(5, "Article"),
+        DE(8, "Devis");
 
         private Prefix(int padding, String description) {
             this.padding = padding;
             this.description = description;
-        }
-
-        public int getPadding() {
-            return padding;
         }
 
         public String getDescription() {
@@ -33,7 +33,8 @@ public enum CodeFormatter {
 
     public String format(Prefix prefix, int num) {
         String number = Strings.padStart(Integer.toString(num), prefix.padding, '0');
-        return prefix.name().concat(number);
+        // Take only the first two characters of the enum value name, allowing to have FA instead of FAC.
+        return prefix.name().substring(0, 2).concat(number);
     }
     
     public int parseNumber(String code) {

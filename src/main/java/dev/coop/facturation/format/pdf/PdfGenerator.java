@@ -109,7 +109,7 @@ public abstract class PdfGenerator {
 
     protected void insertFactureInfos(PdfBuilder pdf, Facture facture) {
         pdf.setCoord(FACTURE_COORD.copy());
-        PdfTableBuilder headerTable = pdf.createTableBuilder(new int[]{40, 100});
+        PdfTableBuilder headerTable = pdf.createTableBuilder(new int[]{50, 100});
         pdf.style().huge().bold();
         headerTable.printCell(facture.getCodePrefix().getDescription())
                 .printCell(facture.getCode());

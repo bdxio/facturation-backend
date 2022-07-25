@@ -22,9 +22,9 @@ import java.util.Map;
 @SpringBootTest(classes = Facturation.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GoogleControllerTest {
 
-    public static final String WORKSHEET_ID = "1S6hdN75AYQqdk9cfC2Ot6dORWZu6u3NfwWzUiPylUdU";
-    public static final String GOOGLE_DRIVE_FOLDERID = "1-Owr1AUhBm9E00NdhiK0z_7A06J6WAmY";
-    public static final String BDXIO = "BDXIO";
+    private static final String WORKSHEET_ID = "1nguYlIfJvLgnTm9LCKXvd4zo83k2lqwwM9L7UulViSE";
+    private static final String GOOGLE_DRIVE_FOLDERID = "1gFqOi6EBjmHSjZk3L633wkpzMszTuGXO";
+    private static final String BDXIO = "BDXIO";
     @Autowired
     private GoogleController googleController;
 

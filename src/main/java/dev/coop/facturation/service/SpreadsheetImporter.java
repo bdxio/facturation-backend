@@ -176,17 +176,21 @@ public class SpreadsheetImporter {
                     final Client client = clientRepository.findByIdOrThrow(SocieteCodeKey.create(societe, extractIntegerValue(CLIENTREF, cells, FACTURE_COLUMNS)));
                     final Article article = articleRepository.findByIdOrThrow(SocieteCodeKey.create(societe, extractIntegerValue(ARTICLEREF, cells, FACTURE_COLUMNS)));
                     final LocalDate date = extractLocalDateValue(DATE, cells, FACTURE_COLUMNS);
+                    final Integer acompte = extractIntegerValue(ACOMPTE, cells, FACTURE_COLUMNS);
 
                     String description = extractStringValue(DESCRIPTION, cells, FACTURE_COLUMNS);
                     description = description == null ? article.getDescription() : description;
                     description = description.replace("${date}", date.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.FRANCE)));
-
+                    if (acompte != null && acompte > 0) {
+                        description = String.format("Acompte de %d%% - %s", acompte, description);
+                    }
                     final Integer factureId = extractIntegerValue(ID, cells, FACTURE_COLUMNS);
                     Facture facture = factureMap.get(factureId);
                     if (facture == null) {
                         facture = new Facture(societe, factureId)
                                 .setDate(date)
-                                .setClient(client);
+                                .setClient(client)
+                                .setAcompte(acompte);
                         factureMap.put(factureId, facture);
                     }
                     facture.addLigne(new Ligne()
@@ -246,7 +250,11 @@ public class SpreadsheetImporter {
     }
 
     private static Integer extractIntegerValue(String key, List<Object> cells, Map<String, Integer> columns) {
-        return Numbers.toInt(extractStringValue(key, cells, columns));
+        String stringValue = extractStringValue(key, cells, columns);
+        if (stringValue == null || stringValue.isEmpty()) {
+            return 0;
+        }
+        return Numbers.toInt(stringValue);
     }
 
     private static LocalDate extractLocalDateValue(String key, List<Object> cells, Map<String, Integer> columns) {
@@ -289,6 +297,7 @@ public class SpreadsheetImporter {
     private static final String IBAN = "iban";
     private static final String BIC = "bic";
     private static final String DELAI_PAIEMENT = "delaiPaiement";
+    private static final String ACOMPTE = "acompte";
 
     private static final Map<String, Integer> SOCIETE_COLUMNS = ImmutableMap.<String, Integer>builder()
             .put(NOM, 0)
@@ -346,6 +355,7 @@ public class SpreadsheetImporter {
             .put(DATE, 4)
             .put(QUANTITE, 5)
             .put(DESCRIPTION, 6)
+            .put(ACOMPTE, 7)
             .build();
 
     private static final Map<String, Integer> DEVIS_COLUMNS = ImmutableMap.<String, Integer>builder()
