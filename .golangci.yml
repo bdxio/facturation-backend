@@ -1,0 +1,40 @@
+linters:
+  enable-all: true
+  disable:
+    - contextcheck
+    - dupl
+    - forbidigo
+    - funlen
+    - exhaustruct
+    - exhaustivestruct
+    - gochecknoglobals
+    - goerr113
+    - gomnd
+    - gosec
+    - lll
+    - nlreturn
+    - noctx
+    - testpackage
+    - varnamelen
+    - wrapcheck
+    - wsl
+    # DEPRECATED
+    - deadcode
+    - interfacer
+    - golint
+    - ifshort
+    - maligned
+    - nosnakecase
+    - scopelint
+    - structcheck
+    - varcheck
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+      - Prefix(github.com/bdxio/facturation-backend)
+  tagliatelle:
+    case:
+      rules:
+        json: "snake"

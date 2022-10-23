@@ -1,8 +1,0 @@
-fileToUpload[0] = FA20200005-BDXIO-COLIBRI SAS.pdf
-fileToUpload[1] = FA20200006-BDXIO-Ippon Technologies.pdf
-fileToUpload[2] = FA20000002-BDXIO-Mangas Gambling Engineering.pdf
-fileToUpload[3] = FA20200003-BDXIO-APSIDE SA.pdf
-fileToUpload[4] = FA20200008-BDXIO-AUDENSIEL TECHNOLOGIES.pdf
-fileToUpload[5] = FA20200004-BDXIO-AT INTERNET.pdf
-fileToUpload[6] = FA20000001-BDXIO-Citruce.pdf
-fileToUpload[7] = FA20200007-BDXIO-Clever Cloud.pdf

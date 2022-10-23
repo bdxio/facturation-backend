@@ -1,88 +1,97 @@
 # facturation-backend
 
-> Application used to generate invoices from a Google spreadsheet.
+> Application used to generate invoices and quotes from a Google spreadsheet.
 
-## Configuration
+## Provisioning
+
+### Google Drive
 
 The application requires a service account to be able to access Google Drive.  
-Once created you need to share the invoices spreadsheet and the folder for the generated invoices with the service account user.  
-You'll also need to create an environment variable called `GOOGLE_ACCOUNT` which contains the JSON file generated for the service account, encoded in Base64.
+Once created you need to share the invoices spreadsheet and the folder for the generated invoices with the service account user.
 
 See https://developers.google.com/identity/protocols/oauth2/service-account for more information on service account.
 
-To create a service account :
-1. go to [Google Cloud Platform Console](https://console.cloud.google.co)
-2. create a new project, called for example "bdxio-facturation-backend"
-3. go to APIs & Services to enable Google Drive API and Google Sheets API
-4. go to IAM & Admin > Service Accounts to create a service account, called for example "bdxio-facturation-backend" 
+To create a service account:
+1. go to [Google Cloud Platform Console](https://console.cloud.google.com)
+2. create a new project, called for example "facturation-backend"
+3. go to "APIs & Services" to enable Google Drive API and Google Sheets API
+4. go to "IAM & Admin > Service Accounts" to create a service account, called for example "facturation-backend"
 5. generate a new key and download the JSON file containing the private key
-6. generate a properties file containing the JSON content encoded in Base64 :
 
-    `echo google.account=$(cat <FILE>.json | base64 --wrap=0) >src/test/resources/google.properties`
+_Note_:
+The Google Drive spreadsheet has to be associated to a GCP project (usually the one created previously).  
+Go to the settings of the Apps Script to set one in case it is missing.
 
-DO NOT COMMIT THIS FILE !
-I REPEAT, DO NOT COMMIT THIS FILE !!
+### Google Cloud Run
 
-To create the variable in Heroku you can use this command :
-```bash
-heroku config:set --app=ancient-reaches-59814 GOOGLE_ACCOUNT=$(cat service-account.json | base64 -w 0)
+The application is currently deployed on Google Cloud Run.
+
+[Install](https://cloud.google.com/sdk/docs/install) the gcloud CLI and 
+[initialize](https://cloud.google.com/sdk/docs/initializing) it by running `gcloud init`.
+
+You should be able to select the project created before.
+
+Then you have to enable the Cloud Run API and Cloud Build API (requires an account with billing enabled).  
+See this [article](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled?hl=fr) for more information.
+
+As the application needs access to the Google Drive spreadsheet a secret with the content of the service account JSON 
+file has to be created:
+```shell
+cat <SERVICE>.json | base64 --wrap 0 | gcloud secrets create google-account --data-file=- --locations=europe-west1 --replication-policy=user-managed
 ```
 
-## Heroku
+_Note_:
+As the application will only be deployed in one region automatic replication is disabled with the 
+`--replication-policy=user-managed` option.
 
-The application is currently deployed on Heroku.
+Finally, add read-only access to secret manager to the service account created for the application.
 
-### Deployment
+## Building
 
-To deploy it you just have to follow these steps :
+Docker is used to build the application:
+```shell
+gcloud builds submit --tag gcr.io/facturation-backend/invoice
+```
 
-1. install the `heroku` cli
-2. ask for Heroku access
-3. `heroku login` to login
-4. `heroku git:remote --app=<HEROKU APP>` to add Heroku as Git remote
-5. `git push heroku` to deploy your current main branch or `git push heroku <BRANCH>:main` to deploy your branch named <BRANCH> to Heroku (_only Heroku main branch is deployed_).
+## Deploying
 
-_Note :_ it is also possible to deploy from GitHub but you'll first need to push the branch to GitHub.
+If deploying for the first time use the following command to create the service:
+```shell
+gcloud run deploy invoice --image=gcr.io/facturation-backend/invoice --update-secrets=GOOGLE_ACCOUNT=google-account:latest --region=europe-west1 --allow-unauthenticated
+```
 
-### Provisioning
+When deploying a new build the following command is sufficient:
+```shell
+gcloud run deploy invoice --image=gcr.io/facturation-backend/invoice --region=europe-west1
+```
 
-To provision the application you need to create a new Heroku application.
+## Using
 
-## Usage
+The application has one HTTP endpoint to generate invoices:
+```shell
+curl https://<SERVICE_URL>/generateInvoices/<SHEET_ID>/<FOLDER_ID>
+```
+where `SHEET_ID` is the ID of the spreadsheet containing the invoices to generate 
+and `FOLDER_ID` the id of the folder where the generated invoices should be saved.
 
-The application has two HTTP endpoints:
+Both IDs can be found in Google Drive when opening the spreadsheet or the folder, their IDs are in the URL.
 
-1. one to import the spreadsheet (in memory)
-2. one to generate the invoices as PDF
+The service URL can be found using the following command:
+```shell
+gcloud run services list
+```
 
-### Spreadsheet import
-
-Hit http://BASE_URL/importInMongo/{worksheetId} to import the spreadsheet in the in-memory database.
-
-`worksheetId` is the id of the spreadsheet to import. It can be found when opened in Google Drive, in the URL.
-
-### Invoices generation
-
-Hit http://BASE_URL/generateInDrive/{worksheetId}/{folderId} to generate the invoices in PDF format.
-
-`worksheetId` is the id of the spreadsheet containing the invoices to generate.
-`folderId` is the id of the folder where the generated invoices should be put.
-
-Both ids can be found in Google Drive when opening the spreadsheet or the folder, their id is in the URL.
-
-Only new invoices will be generated.  
-To generate again an existing invoice remove the previous one.
+_Note_:
+Only new invoices will be generated.    
+To generate again an existing invoice remove the existing one.
 
 ## Local
 
-To use locally the application you just have to configure the Google service account to use in [application.yaml](./src/main/resources/application.yaml) 
-and start the application.
+To use locally the application you can just define the GOOGLE_ACCOUNT variable and run the application:
+```shell
+export GOOGLE_ACCOUNT=$(cat <SERVICE>.json | base64 --wrap 0)
+# or for fish lovers
+set --export --global GOOGLE_ACCOUNT (cat <SERVICE>.json | base64 --wrap 0)
 
-You can use the service account to use the production spreadsheet and then hit your local application to generate the invoices on Google Drive.  
-To retrieve the service account credentials you can use the Heroku cli:
-```sh
-heroku config:get GOOGLE_ACCOUNT
+go run cmd/invoice/main.go
 ```
-
-Put the retrieved value as is in the application.yaml configuration file.
-
